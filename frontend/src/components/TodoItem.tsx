@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { Pencil } from 'lucide-react'
 import type { Todo } from '../types'
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
   selected: boolean
   onSelect: () => void
   onToggle: () => void
+  onEdit: (id: number, name: string) => void
 }
 
 const priorityStyle: Record<string, string> = {
@@ -20,10 +22,18 @@ const priorityLabel: Record<string, string> = {
   normal: '낮음',
 }
 
-export default function TodoItem({ todo, selected, onSelect, onToggle }: Props) {
+export default function TodoItem({ todo, selected, onSelect, onToggle, onEdit }: Props) {
   const [animating, setAnimating] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(todo.name)
+  const inputRef = useRef<HTMLInputElement>(null)
+
   const completedSteps = todo.steps.filter(s => s.done).length
   const totalSteps = todo.steps.length
+
+  useEffect(() => {
+    if (isEditing) inputRef.current?.focus()
+  }, [isEditing])
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -31,9 +41,31 @@ export default function TodoItem({ todo, selected, onSelect, onToggle }: Props) 
     onToggle()
   }
 
+  const startEdit = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditValue(todo.name)
+    setIsEditing(true)
+  }
+
+  const commitEdit = () => {
+    const trimmed = editValue.trim()
+    if (trimmed && trimmed !== todo.name) onEdit(todo.id, trimmed)
+    setIsEditing(false)
+  }
+
+  const cancelEdit = () => {
+    setEditValue(todo.name)
+    setIsEditing(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') { e.preventDefault(); commitEdit() }
+    if (e.key === 'Escape') cancelEdit()
+  }
+
   return (
     <div
-      onClick={onSelect}
+      onClick={isEditing ? undefined : onSelect}
       style={{ transition: 'opacity 0.3s ease' }}
       className={`group px-3 py-2.5 rounded-md cursor-pointer transition-colors ${
         selected
@@ -74,17 +106,40 @@ export default function TodoItem({ todo, selected, onSelect, onToggle }: Props) 
               <span className="text-[10px] text-gray-400 dark:text-gray-500">{todo.deadline}</span>
             )}
           </div>
-          <p className={`text-[13px] mt-0.5 leading-snug transition-all duration-300 ${
-            todo.done ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-200'
-          }`}>
-            {todo.name}
-          </p>
+
+          {isEditing ? (
+            <input
+              ref={inputRef}
+              value={editValue}
+              onChange={e => setEditValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={commitEdit}
+              onClick={e => e.stopPropagation()}
+              className="w-full mt-0.5 text-[13px] leading-snug bg-transparent border-b border-[#1d9e75] outline-none text-gray-800 dark:text-gray-200"
+            />
+          ) : (
+            <p className={`text-[13px] mt-0.5 leading-snug transition-all duration-300 ${
+              todo.done ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-200'
+            }`}>
+              {todo.name}
+            </p>
+          )}
+
           {totalSteps > 0 && (
             <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-0.5">
               단계 {completedSteps}/{totalSteps} 완료
             </p>
           )}
         </div>
+
+        {!todo.done && !isEditing && (
+          <button
+            onClick={startEdit}
+            className="flex-shrink-0 mt-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-[#1d9e75]"
+          >
+            <Pencil size={12} />
+          </button>
+        )}
       </div>
     </div>
   )

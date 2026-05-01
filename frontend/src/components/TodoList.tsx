@@ -14,11 +14,12 @@ interface Props {
   selectedId: number | null
   onSelect: (id: number) => void
   onToggle: (id: number) => void
+  onEdit: (id: number, name: string) => void
   onAdd: (data: { name: string; memo: string; priority: Priority; deadline: string }) => Promise<void>
   width: number
 }
 
-export default function TodoList({ todos, filter, selectedId, onSelect, onToggle, onAdd, width }: Props) {
+export default function TodoList({ todos, filter, selectedId, onSelect, onToggle, onEdit, onAdd, width }: Props) {
   const [showModal, setShowModal] = useState(false)
 
   const active = todos.filter(t => !t.done)
@@ -49,6 +50,7 @@ export default function TodoList({ todos, filter, selectedId, onSelect, onToggle
             selected={todo.id === selectedId}
             onSelect={() => onSelect(todo.id)}
             onToggle={() => onToggle(todo.id)}
+            onEdit={onEdit}
           />
         ))}
 
@@ -62,6 +64,7 @@ export default function TodoList({ todos, filter, selectedId, onSelect, onToggle
                 selected={todo.id === selectedId}
                 onSelect={() => onSelect(todo.id)}
                 onToggle={() => onToggle(todo.id)}
+                onEdit={onEdit}
               />
             ))}
           </>

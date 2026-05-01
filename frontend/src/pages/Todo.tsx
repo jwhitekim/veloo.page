@@ -120,6 +120,7 @@ export default function TodoPage() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         onToggle={handleToggleDone}
+        onEdit={(id, name) => handleUpdate(id, { name })}
         onAdd={handleAdd}
         width={listWidth}
       />

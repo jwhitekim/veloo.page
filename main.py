@@ -19,7 +19,6 @@ app.mount("/paper", paper_app)
 app.mount("/translate", translate_app)
 app.mount("/arch-trainer", arch_app)
 app.mount("/todo", todo_app)
-
 app.mount("/assets", StaticFiles(directory=os.path.join(DIST, "assets")), name="assets")
 
 
@@ -32,3 +31,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 9000)) 
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+ 
