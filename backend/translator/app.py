@@ -15,7 +15,7 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 app = FastAPI(title="Translation Studio")
 
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001")
 _client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 _TERM_PROMPT = """다음 영어 텍스트 또는 전문 용어를 한국어로 번역하고, 논문/연구 맥락에서 설명해주세요.
@@ -51,6 +51,12 @@ def translate(req: TranslateRequest):
         messages=[{"role": "user", "content": prompt}],
     )
     content = msg.content[0].text.strip()
+    # strip markdown code fences that Claude sometimes adds
+    if content.startswith("```"):
+        content = content.split("\n", 1)[-1]
+        if content.endswith("```"):
+            content = content[: content.rfind("```")]
+        content = content.strip()
 
     if is_term:
         try:

@@ -2,12 +2,29 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as api from '../api/translator'
 
+const C = {
+  bg:         'var(--c-bg)',
+  surface:    'var(--c-surface)',
+  card:       'var(--c-card)',
+  border:     'var(--c-border)',
+  accent:     'var(--c-accent)',
+  accentDim:  'var(--c-accent-dim)',
+  accentText: 'var(--c-accent-txt)',
+  text:       'var(--c-text)',
+  textSub:    'var(--c-text-sub)',
+  textMuted:  'var(--c-text-muted)',
+  error:      'var(--c-error)',
+  green:      'var(--c-green)',
+  greenDim:   'var(--c-green-dim)',
+}
+
 export default function Translator() {
   const navigate = useNavigate()
   const [source, setSource] = useState('')
   const [result, setResult] = useState<api.TranslateResult | null>(null)
   const [translating, setTranslating] = useState(false)
   const [error, setError] = useState('')
+  const [focused, setFocused] = useState(false)
 
   const [dictOpen, setDictOpen] = useState(false)
   const [dictQuery, setDictQuery] = useState('')
@@ -80,44 +97,89 @@ export default function Translator() {
   }
 
   return (
-    <div style={{ fontFamily: "'Google Sans', 'Segoe UI', Arial, sans-serif", height: '100vh', overflow: 'hidden' }}>
+    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", height: '100vh', overflow: 'hidden', background: C.bg, color: C.text }}>
       {/* Home button */}
-      <button onClick={() => navigate('/')} style={{ position: 'fixed', top: 12, left: 12, zIndex: 9999, background: 'rgba(0,0,0,0.06)', border: '1px solid #e0e0e0', borderRadius: 8, padding: '4px 10px', fontSize: '0.78rem', cursor: 'pointer', color: '#5f6368' }}>← Home</button>
+      <button
+        onClick={() => navigate('/')}
+        style={{
+          position: 'fixed', top: 14, left: 14, zIndex: 9999,
+          background: 'rgba(255,255,255,0.04)',
+          border: `1px solid ${C.border}`,
+          borderRadius: 8, padding: '5px 12px',
+          fontSize: '0.78rem', cursor: 'pointer',
+          color: C.textMuted, transition: 'color 0.2s, background 0.2s',
+        }}
+        onMouseEnter={e => { (e.target as HTMLElement).style.color = C.accentText; (e.target as HTMLElement).style.background = C.accentDim }}
+        onMouseLeave={e => { (e.target as HTMLElement).style.color = C.textMuted; (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+      >← Home</button>
 
       <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
         {/* Main */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '40px 20px 60px', background: '#f8f9fa', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 0 }}>
-          <h1 style={{ fontSize: 15, color: '#5f6368', marginBottom: 20, letterSpacing: '0.3px' }}>Translation Studio</h1>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '52px 24px 60px', background: C.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 0 }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: C.textMuted, marginBottom: 24 }}>Translation Studio</div>
 
-          <div style={{ width: '100%', maxWidth: 900, background: '#fff', borderRadius: 12, boxShadow: '0 1px 6px rgba(0,0,0,0.15)', display: 'flex', overflow: 'hidden' }}>
+          <div style={{ width: '100%', maxWidth: 940, background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, display: 'flex', overflow: 'hidden' }}>
             {/* Input */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              <div style={{ padding: '8px 16px', fontSize: 12, color: '#5f6368', borderBottom: '1px solid #e0e0e0' }}>원문 (ENGLISH)</div>
+              <div style={{ padding: '8px 16px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: C.textMuted, borderBottom: `1px solid ${C.border}` }}>English</div>
               <textarea
                 value={source}
                 onChange={e => handleInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); clearTimeout(timerRef.current); doTranslate(source) } }}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 placeholder={'텍스트를 입력하면 자동 번역됩니다.\nCtrl+Enter → 즉시 번역  /  텍스트 선택 후 우클릭 → 사전 검색'}
-                style={{ flex: 1, height: 260, border: 'none', outline: 'none', resize: 'none', padding: 16, fontSize: 16, lineHeight: 1.7, fontFamily: 'inherit', background: 'transparent', color: '#202124' }}
+                style={{
+                  flex: 1, height: 280, border: 'none', resize: 'none',
+                  padding: 18, fontSize: 15, lineHeight: 2.0,
+                  fontFamily: 'inherit', background: 'transparent',
+                  color: 'rgba(255,255,255,0.78)', outline: 'none',
+                  boxShadow: focused ? `inset 0 0 0 2px rgba(177,156,217,0.35)` : 'none',
+                  transition: 'box-shadow 0.2s',
+                  borderRadius: '0 0 0 14px',
+                }}
               />
             </div>
 
+            {/* Divider */}
+            <div style={{ width: 1, background: C.border, flexShrink: 0 }} />
+
             {/* Output */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, borderLeft: '1px solid #e0e0e0' }}>
-              <div style={{ padding: '8px 16px', fontSize: 12, color: '#5f6368', borderBottom: '1px solid #e0e0e0' }}>번역 결과</div>
-              <div style={{ padding: 16, fontSize: 16, lineHeight: 1.7, minHeight: 260, color: result ? '#202124' : '#5f6368' }}>
-                {translating && <span style={{ color: '#9aa0a6', fontSize: 14 }}>번역 중...</span>}
-                {error && <span style={{ color: '#d93025', fontSize: 14 }}>{error}</span>}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <div style={{ padding: '8px 16px', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: C.textMuted, borderBottom: `1px solid ${C.border}` }}>Korean</div>
+              <div style={{ padding: 18, minHeight: 280 }}>
+                {translating && (
+                  <span style={{ color: C.textMuted, fontSize: 14 }}>번역 중<span style={{ display: 'inline-block', animation: 'pulse 1s infinite' }}>…</span></span>
+                )}
+                {error && <span style={{ color: C.error, fontSize: 14 }}>{error}</span>}
                 {!translating && !error && result && (
-                  <>
-                    <div>{result.translation}</div>
+                  <div>
+                    {/* Translation */}
+                    <div style={{ fontSize: 18, fontWeight: 600, color: 'rgba(255,255,255,0.82)', lineHeight: 2.0, marginBottom: 14 }}>
+                      {result.translation}
+                    </div>
+
+                    {/* Explanation */}
                     {result.explanation && (
-                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #e0e0e0', fontSize: 14, color: '#5f6368', lineHeight: 1.6 }}>{result.explanation}</div>
+                      <div style={{ fontSize: '0.86rem', color: C.textSub, lineHeight: 2.0, marginBottom: 14, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+                        {result.explanation}
+                      </div>
                     )}
+
+                    {/* Related tags */}
                     {result.related && result.related.length > 0 && (
-                      <div style={{ marginTop: 10, fontSize: 12, color: '#9aa0a6' }}>관련: {result.related.join(' · ')}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+                        {result.related.map((r, i) => (
+                          <span key={i} style={{ padding: '3px 10px', background: C.accentDim, color: C.accentText, borderRadius: 20, fontSize: '0.76rem', fontWeight: 600 }}>
+                            {r}
+                          </span>
+                        ))}
+                      </div>
                     )}
-                  </>
+                  </div>
+                )}
+                {!translating && !error && !result && (
+                  <span style={{ color: C.textMuted, fontSize: 14 }}>번역 결과가 여기에 표시됩니다</span>
                 )}
               </div>
             </div>
@@ -125,29 +187,31 @@ export default function Translator() {
         </div>
 
         {/* Dict Panel */}
-        <div style={{ width: dictOpen ? 400 : 0, overflow: 'hidden', transition: 'width 0.3s ease', borderLeft: '1px solid #e0e0e0', background: '#fff', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ width: dictOpen ? 400 : 0, overflow: 'hidden', transition: 'width 0.3s ease', borderLeft: `1px solid ${C.border}`, background: C.surface, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div style={{ width: 400, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8f9fa', flexShrink: 0 }}>
-              <span style={{ fontWeight: 600, fontSize: 14, color: '#202124' }}>네이버 사전 — {dictQuery}</span>
-              <button onClick={() => setDictOpen(false)} style={{ border: 'none', background: 'none', fontSize: 18, cursor: 'pointer', color: '#5f6368', lineHeight: 1 }}>✕</button>
+            <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: C.text }}>사전 — <span style={{ color: C.accentText }}>{dictQuery}</span></span>
+              <button onClick={() => setDictOpen(false)} style={{ border: 'none', background: 'none', fontSize: 16, cursor: 'pointer', color: C.textMuted, lineHeight: 1 }}>✕</button>
             </div>
-            <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
-              {dictLoading && <p style={{ padding: 16, color: '#9aa0a6', fontSize: 14 }}>검색 중...</p>}
-              {!dictLoading && dictEntries.length === 0 && <p style={{ padding: 16, color: '#9aa0a6', fontSize: 14 }}>검색 결과 없음</p>}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '6px 0' }}>
+              {dictLoading && <p style={{ padding: '16px 18px', color: C.textMuted, fontSize: 14 }}>검색 중...</p>}
+              {!dictLoading && dictEntries.length === 0 && <p style={{ padding: '16px 18px', color: C.textMuted, fontSize: 14 }}>검색 결과 없음</p>}
               {dictEntries.map((item, i) => (
-                <div key={i} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f3f4' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 16, color: '#1a73e8' }}>{item.entry}</span>
-                    <span style={{ fontSize: 13, color: '#9aa0a6' }}>{item.phonetic}</span>
+                <div key={i} style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontWeight: 700, fontSize: 17, color: C.accentText }}>{item.entry}</span>
+                    <span style={{ fontSize: 13, color: C.textMuted }} dangerouslySetInnerHTML={{ __html: item.phonetic }} />
                   </div>
                   {item.senses.map((s, j) => (
-                    <div key={j} style={{ marginTop: 6 }}>
-                      <span style={{ fontSize: 11, color: '#03c75a', background: '#e8f9f0', padding: '1px 6px', borderRadius: 3, marginRight: 6 }}>{s.pos}</span>
-                      <span style={{ fontSize: 14, color: '#202124' }}>{s.value}</span>
+                    <div key={j} style={{ marginTop: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: '0.7rem', color: C.green, background: C.greenDim, padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{s.pos}</span>
+                        <span style={{ fontSize: '0.9rem', color: C.text }} dangerouslySetInnerHTML={{ __html: s.value }} />
+                      </div>
                       {s.exampleOri && (
-                        <div style={{ marginTop: 4, paddingLeft: 8, borderLeft: '2px solid #e0e0e0', color: '#9aa0a6', fontSize: 12, lineHeight: 1.6 }}>
-                          <div>{s.exampleOri}</div>
-                          <div>{s.exampleTrans}</div>
+                        <div style={{ marginTop: 4, paddingLeft: 10, borderLeft: `2px solid ${C.border}`, fontSize: '0.78rem', lineHeight: 1.65 }}>
+                          <div style={{ color: C.textSub }} dangerouslySetInnerHTML={{ __html: s.exampleOri }} />
+                          <div style={{ color: C.textMuted }}>{s.exampleTrans}</div>
                         </div>
                       )}
                     </div>
@@ -161,10 +225,14 @@ export default function Translator() {
 
       {/* Context menu */}
       {ctxVisible && (
-        <div style={{ position: 'fixed', left: ctxPos.x, top: ctxPos.y, background: '#fff', borderRadius: 8, boxShadow: '0 2px 16px rgba(0,0,0,0.18)', zIndex: 9999, minWidth: 180, overflow: 'hidden' }}
-          onClick={() => setCtxVisible(false)}>
+        <div
+          style={{ position: 'fixed', left: ctxPos.x, top: ctxPos.y, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 9999, minWidth: 180, overflow: 'hidden' }}
+          onClick={() => setCtxVisible(false)}
+        >
           <button
-            style={{ display: 'block', width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', fontSize: 14, color: '#202124', cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ display: 'block', width: '100%', padding: '10px 16px', background: 'none', border: 'none', textAlign: 'left', fontSize: 14, color: C.text, cursor: 'pointer', fontFamily: 'inherit' }}
+            onMouseEnter={e => (e.currentTarget.style.background = C.accentDim)}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             onClick={() => { openDict(ctxWord); setCtxVisible(false) }}
           >네이버 사전에서 검색</button>
         </div>

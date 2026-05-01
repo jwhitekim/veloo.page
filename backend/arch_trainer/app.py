@@ -15,7 +15,7 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 app = FastAPI(title="논문 아키텍처 설명력 훈련")
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-MODEL = "claude-sonnet-4-6"
+MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
 
 # 서버 메모리 세션 저장소: {session_id: {"explanation": str}}
 _sessions: dict[str, dict] = {}

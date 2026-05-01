@@ -1,4 +1,4 @@
-const SERVER = 'http://localhost:8000';
+const SERVER = 'http://localhost:9000';
 let windowId = null;
 
 chrome.action.onClicked.addListener(() => {
@@ -47,7 +47,7 @@ async function analyzePdf(fileData, fileName) {
     const fd = new FormData();
     fd.append('file', blob, fileName);
 
-    const res = await fetch(`${SERVER}/analyze-pdf`, { method: 'POST', body: fd });
+    const res = await fetch(`${SERVER}/paper/analyze-pdf`, { method: 'POST', body: fd });
     const data = await res.json();
 
     const result = data.error ? { error: data.error } : { ok: true, data };

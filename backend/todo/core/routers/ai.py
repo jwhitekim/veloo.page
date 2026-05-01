@@ -36,7 +36,7 @@ def generate_steps(req: schemas.GenerateStepsRequest):
 {{"steps": ["단계1", "단계2", "단계3"]}}"""
 
     message = client.messages.create(
-        model="claude-sonnet-4-5",
+        model=os.getenv("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001"),
         max_tokens=512,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -76,7 +76,7 @@ def generate_strategy(req: schemas.GenerateStrategyRequest, sb: Client = Depends
 한국어로, 친근하게 작성하세요."""
 
     message = client.messages.create(
-        model="claude-sonnet-4-5",
+        model=os.getenv("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001"),
         max_tokens=256,
         messages=[{"role": "user", "content": prompt}],
     )

@@ -30,5 +30,5 @@ async def spa(full_path: str):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 9000))
-    uvicorn.run("main:app", port=port)
+    port = int(os.getenv("PORT", 9000)) 
+    uvicorn.run("main:app", host="localhost", port=port, reload=True)

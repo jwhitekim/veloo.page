@@ -4,19 +4,57 @@
 
 /* ── CSS variables (light / dark) ─────────────────────────── */
 :root {
+  /* Todo-specific (existing) */
   --bg:           #f8f8f7;
   --panel:        #ffffff;
   --list:         #f3f3f1;
   --border:       rgba(0, 0, 0, 0.08);
   --input-border: rgba(0, 0, 0, 0.15);
+
+  /* Global app tokens */
+  --c-bg:         #f8f8fb;
+  --c-surface:    #ffffff;
+  --c-card:       #f2f2f8;
+  --c-sidebar:    #f0f0f5;
+  --c-header:     #f5f5fa;
+  --c-border:     rgba(0, 0, 0, 0.07);
+  --c-border-mid: rgba(0, 0, 0, 0.10);
+  --c-accent:     #9b87c7;
+  --c-accent-dim: rgba(177, 156, 217, 0.12);
+  --c-accent-txt: #6d4ab5;
+  --c-text:       rgba(0, 0, 0, 0.84);
+  --c-text-sub:   rgba(0, 0, 0, 0.55);
+  --c-text-muted: rgba(0, 0, 0, 0.38);
+  --c-green:      #16a34a;
+  --c-green-dim:  rgba(22, 163, 74, 0.10);
+  --c-error:      #dc2626;
 }
 
 .dark {
+  /* Todo-specific (existing) */
   --bg:           #141414;
   --panel:        #1c1c1c;
   --list:         #181818;
   --border:       rgba(255, 255, 255, 0.07);
   --input-border: rgba(255, 255, 255, 0.12);
+
+  /* Global app tokens */
+  --c-bg:         #0f0f14;
+  --c-surface:    #16161d;
+  --c-card:       #1c1c26;
+  --c-sidebar:    #111118;
+  --c-header:     #0e0e15;
+  --c-border:     rgba(255, 255, 255, 0.07);
+  --c-border-mid: rgba(255, 255, 255, 0.10);
+  --c-accent:     #B19CD9;
+  --c-accent-dim: rgba(177, 156, 217, 0.13);
+  --c-accent-txt: #c4b5fd;
+  --c-text:       rgba(255, 255, 255, 0.82);
+  --c-text-sub:   rgba(255, 255, 255, 0.50);
+  --c-text-muted: rgba(255, 255, 255, 0.28);
+  --c-green:      #4ade80;
+  --c-green-dim:  rgba(39, 174, 96, 0.15);
+  --c-error:      #f87171;
 }
 
 /* ── Base ──────────────────────────────────────────────────── */

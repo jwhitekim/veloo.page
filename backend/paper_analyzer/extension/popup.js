@@ -1,4 +1,4 @@
-const SERVER = 'http://localhost:8000';
+const SERVER = 'http://localhost:9000';
 
 const dropzone  = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -53,7 +53,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
 
 // Open web UI
 document.getElementById('openWeb').addEventListener('click', () => {
-  chrome.tabs.create({ url: SERVER });
+  chrome.tabs.create({ url: SERVER + '/#/paper' });
 });
 
 // File browse
@@ -215,7 +215,7 @@ function renderResult(data) {
       const paperItems = (a.topPapers || []).map(p => {
         const isCurrent = p.title && p.title.toLowerCase() === currentTitle;
         const titleHtml = isCurrent
-          ? `<strong style="color:#4a6cf7;">${esc(p.title)} ★</strong>`
+          ? `<strong style="color:#B19CD9;">${esc(p.title)} ★</strong>`
           : esc(p.title);
         return `<li>${titleHtml} <span class="cite">· 인용 ${p.citationCount ?? '?'}회</span></li>`;
       }).join('');

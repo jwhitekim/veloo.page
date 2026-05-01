@@ -38,7 +38,7 @@ def analyze_paper(abstract: str, title: str = "", doi: str = "") -> dict:
         prompt = _TITLE_PROMPT.format(title=title, doi=doi or "없음")
 
     message = client.messages.create(
-        model=os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001"),
+        model=os.getenv("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001"),
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
     )

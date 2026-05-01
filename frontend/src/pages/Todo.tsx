@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import type { NavFilter, Priority, Todo } from '../types'
 import { useTodos } from '../hooks/useTodos'
 import { useAi } from '../hooks/useAi'
-import { useDarkMode } from '../hooks/useDarkMode'
 import Sidebar from '../components/Sidebar'
 import TodoList from '../components/TodoList'
 import FocusPanel from '../components/FocusPanel'
@@ -18,7 +17,6 @@ export default function TodoPage() {
   const [filter, setFilter] = useState<NavFilter>('all')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [listWidth, setListWidth] = useState(LIST_DEFAULT)
-  const { isDark, toggle: toggleDark } = useDarkMode()
 
   const { todos, loading, reload, addTodo, editTodo, removeTodo, toggleDone, refresh } = useTodos(filter)
   const { generateSteps, generateStrategy, generatingSteps, generatingStrategy } = useAi()
@@ -114,7 +112,7 @@ export default function TodoPage() {
         ← Home
       </button>
 
-      <Sidebar filter={filter} onFilter={setFilter} todos={todos} isDark={isDark} onToggleDark={toggleDark} />
+      <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
 
       <TodoList
         todos={todos}

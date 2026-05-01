@@ -1,4 +1,3 @@
-import { Moon, Sun } from 'lucide-react'
 import type { NavFilter, Todo } from '../types'
 import dayjs from 'dayjs'
 
@@ -6,8 +5,6 @@ interface Props {
   filter: NavFilter
   onFilter: (f: NavFilter) => void
   todos: Todo[]
-  isDark: boolean
-  onToggleDark: () => void
 }
 
 const navItems: { label: string; key: NavFilter }[] = [
@@ -17,7 +14,7 @@ const navItems: { label: string; key: NavFilter }[] = [
   { label: '메모', key: 'memo' },
 ]
 
-export default function Sidebar({ filter, onFilter, todos, isDark, onToggleDark }: Props) {
+export default function Sidebar({ filter, onFilter, todos }: Props) {
   const count = (key: NavFilter) => {
     if (key === 'today') {
       const today = dayjs().format('YYYY-MM-DD')
@@ -59,19 +56,6 @@ export default function Sidebar({ filter, onFilter, todos, isDark, onToggleDark 
         ))}
       </nav>
 
-      <div
-        className="px-3 py-3 border-t flex items-center justify-between"
-        style={{ borderColor: 'var(--border)' }}
-      >
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">설정</span>
-        <button
-          onClick={onToggleDark}
-          className="p-1.5 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-          title={isDark ? '라이트 모드' : '다크 모드'}
-        >
-          {isDark ? <Sun size={13} /> : <Moon size={13} />}
-        </button>
-      </div>
     </aside>
   )
 }
