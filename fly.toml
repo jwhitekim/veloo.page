@@ -1,0 +1,24 @@
+app = "lab-toolkit"
+region = "nrt"
+
+[build]
+
+[env]
+  PORT = "9000"
+  # 아래 키는 값을 포함하지 않음 — fly secrets set 으로 별도 설정 필요
+  # ANTHROPIC_API_KEY
+  # SUPABASE_URL
+  # SUPABASE_KEY
+  # S2_API_KEY
+
+[http_service]
+  internal_port = 9000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

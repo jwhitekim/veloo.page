@@ -133,7 +133,7 @@ export default function Translator() {
                   flex: 1, height: 280, border: 'none', resize: 'none',
                   padding: 18, fontSize: 15, lineHeight: 2.0,
                   fontFamily: 'inherit', background: 'transparent',
-                  color: 'rgba(255,255,255,0.78)', outline: 'none',
+                  color: C.text, outline: 'none',
                   boxShadow: focused ? `inset 0 0 0 2px rgba(177,156,217,0.35)` : 'none',
                   transition: 'box-shadow 0.2s',
                   borderRadius: '0 0 0 14px',

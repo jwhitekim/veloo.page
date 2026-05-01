@@ -66,6 +66,10 @@ body {
   color: #1a1a1a;
 }
 
+input, textarea, select {
+  color: inherit;
+}
+
 body:not(:has(.home-root)) {
   background: var(--bg);
 }
