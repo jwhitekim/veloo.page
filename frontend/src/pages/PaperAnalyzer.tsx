@@ -96,7 +96,7 @@ export default function PaperAnalyzer() {
             onKeyDown={e => { if (e.key === 'Enter') doSearch() }}
             placeholder="논문 제목 또는 URL (arXiv / DOI / ACM / IEEE 등) 입력"
             autoFocus
-            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${C.borderMid}`, borderRadius: 8, padding: '8px 14px', fontSize: '0.88rem', color: '#fff', outline: 'none', fontFamily: 'inherit' }}
+            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${C.borderMid}`, borderRadius: 8, padding: '8px 14px', fontSize: '0.88rem', color: C.text, outline: 'none', fontFamily: 'inherit' }}
           />
           <button
             onClick={doSearch}
