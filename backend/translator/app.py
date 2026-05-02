@@ -6,8 +6,8 @@ import anthropic
 import requests
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse, JSONResponse
 from pathlib import Path
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
@@ -29,6 +29,7 @@ _NAVER_HEADERS = {
     "Accept":     "application/json",
 }
 
+
 class TranslateRequest(BaseModel):
     text: str
 
@@ -36,14 +37,19 @@ class TranslateRequest(BaseModel):
 @app.post("/api/translate")
 def translate(req: TranslateRequest):
     text = req.text.strip()
+    if not text:
+        return JSONResponse({"error": "텍스트가 비어 있습니다."}, status_code=400)
 
-    msg = _client.messages.create(
-        model=CLAUDE_MODEL,
-        max_tokens=512,
-        messages=[{"role": "user", "content": _LONG_PROMPT.format(text=text)}],
-    )
-    translation = msg.content[0].text.strip()
-    return JSONResponse({"translation": translation})
+    def stream():
+        with _client.messages.stream(
+            model=CLAUDE_MODEL,
+            max_tokens=512,
+            messages=[{"role": "user", "content": _LONG_PROMPT.format(text=text)}],
+        ) as s:
+            for chunk in s.text_stream:
+                yield chunk
+
+    return StreamingResponse(stream(), media_type="text/plain; charset=utf-8")
 
 
 @app.get("/api/naver-dict")
