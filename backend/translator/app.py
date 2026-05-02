@@ -1,5 +1,4 @@
 """Translation Studio — FastAPI + Claude API"""
-import json
 import os
 import time
 
@@ -18,16 +17,11 @@ app = FastAPI(title="Translation Studio")
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001")
 _client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-_TERM_PROMPT = """다음 영어 텍스트 또는 전문 용어를 한국어로 번역하고, 논문/연구 맥락에서 설명해주세요.
-텍스트: {text}
-다음 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
-{{
-  "translation": "한국어 번역",
-  "explanation": "논문·연구 맥락에서의 의미와 활용 (2~3문장)",
-  "related": ["관련 개념 또는 용어 2~3개"]
-}}"""
+_LONG_PROMPT = """\
+다음 영어 문장을 논문·연구 맥락에 맞는 자연스러운 한국어 학술 문체로 번역하세요.
+번역문만 출력하세요.
 
-_LONG_PROMPT = "다음 영어 문장을 자연스러운 한국어로 번역하세요. 번역문만 출력하세요.\n\n{text}"
+{text}"""
 
 _NAVER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -42,29 +36,14 @@ class TranslateRequest(BaseModel):
 @app.post("/api/translate")
 def translate(req: TranslateRequest):
     text = req.text.strip()
-    is_term = len(text.split()) <= 5
-    prompt = (_TERM_PROMPT if is_term else _LONG_PROMPT).format(text=text)
 
     msg = _client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=512,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[{"role": "user", "content": _LONG_PROMPT.format(text=text)}],
     )
-    content = msg.content[0].text.strip()
-    # strip markdown code fences that Claude sometimes adds
-    if content.startswith("```"):
-        content = content.split("\n", 1)[-1]
-        if content.endswith("```"):
-            content = content[: content.rfind("```")]
-        content = content.strip()
-
-    if is_term:
-        try:
-            return JSONResponse(json.loads(content))
-        except json.JSONDecodeError:
-            return JSONResponse({"translation": content, "explanation": "", "related": []})
-
-    return JSONResponse({"translation": content})
+    translation = msg.content[0].text.strip()
+    return JSONResponse({"translation": translation})
 
 
 @app.get("/api/naver-dict")

@@ -8,6 +8,13 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+_supabase_url = os.environ.get("SUPABASE_URL")
+_supabase_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+_supabase = None
+if _supabase_url and _supabase_key:
+    from supabase import create_client
+    _supabase = create_client(_supabase_url, _supabase_key)
+
 from core.semantic_scholar import (
     parse_url, fetch_paper_by_url,
     fetch_paper_by_id, search_papers_by_title, enrich_authors,
@@ -83,6 +90,23 @@ async def analyze(paper_id: str = Form(None), url: str = Form(None)):
         authors = enrich_authors(paper)
         quality = lookup_venue(basic["venue"])
 
+        if _supabase:
+            try:
+                _supabase.table("paper_analyses").insert({
+                    "title": basic["title"],
+                    "doi": basic["doi"],
+                    "arxiv_id": basic["arxivId"],
+                    "domain": analysis.get("domain"),
+                    "keywords": analysis.get("keywords"),
+                    "problem_short": analysis.get("problem_short"),
+                    "method_short": analysis.get("method_short"),
+                    "conclusion_short": analysis.get("conclusion_short"),
+                    "full_result": analysis,
+                    "source": "search",
+                }).execute()
+            except Exception:
+                pass
+
         return JSONResponse({
             "basic": basic,
             "analysis": analysis,
@@ -148,6 +172,23 @@ async def analyze_pdf(file: UploadFile = File(...)):
 
         analysis = analyze_paper(abstract, title=title, doi=doi)
         quality  = lookup_venue(venue)
+
+        if _supabase:
+            try:
+                _supabase.table("paper_analyses").insert({
+                    "title": title,
+                    "doi": doi or None,
+                    "arxiv_id": arxiv_id,
+                    "domain": analysis.get("domain"),
+                    "keywords": analysis.get("keywords"),
+                    "problem_short": analysis.get("problem_short"),
+                    "method_short": analysis.get("method_short"),
+                    "conclusion_short": analysis.get("conclusion_short"),
+                    "full_result": analysis,
+                    "source": "pdf",
+                }).execute()
+            except Exception:
+                pass
 
         return JSONResponse({
             "basic": basic,

@@ -1,9 +1,8 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { RotateCcw } from 'lucide-react'
 import * as api from '../api/archTrainer'
+import type { ExplanationJSON, FeedbackJSON } from '../api/archTrainer'
 
 const C = {
   bg:         'var(--c-bg)',
@@ -21,16 +20,29 @@ const C = {
   error:      'var(--c-error)',
 }
 
-type Step = 'upload' | 'explanation' | 'train' | 'feedback'
+const SECTION_LABELS: Record<keyof ExplanationJSON, string> = {
+  overview:     '전체 흐름',
+  modules:      '각 모듈',
+  data_flow:    '데이터 흐름',
+  contribution: '핵심 기여',
+}
+
+const FEEDBACK_LABELS: Record<keyof FeedbackJSON, string> = {
+  correct:    '잘 이해한 부분',
+  missing:    '틀리거나 빠진 부분',
+  suggestion: '더 정확한 표현',
+}
+
+type Step = 'upload' | 'train' | 'feedback'
 
 export default function ArchTrainer() {
   const navigate = useNavigate()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [sessionId, setSessionId] = useState('')
-  const [explanation, setExplanation] = useState('')
+  const [explanation, setExplanation] = useState<ExplanationJSON | null>(null)
   const [userText, setUserText] = useState('')
-  const [feedbackText, setFeedbackText] = useState('')
+  const [feedback, setFeedback] = useState<FeedbackJSON | null>(null)
   const [step, setStep] = useState<Set<Step>>(new Set(['upload']))
   const [loadingExplain, setLoadingExplain] = useState(false)
   const [loadingFeedback, setLoadingFeedback] = useState(false)
@@ -59,7 +71,7 @@ export default function ArchTrainer() {
       const data = await api.explain(imageFile)
       setSessionId(data.session_id)
       setExplanation(data.explanation)
-      show('explanation')
+      show('train')
     } catch (e) {
       alert('오류: ' + (e as Error).message)
     } finally {
@@ -73,7 +85,7 @@ export default function ArchTrainer() {
     setStep(prev => { const s = new Set(prev); s.delete('feedback'); return s })
     try {
       const data = await api.feedback(sessionId, userText)
-      setFeedbackText(data.feedback)
+      setFeedback(data.feedback)
       show('feedback')
     } catch (e) {
       alert('오류: ' + (e as Error).message)
@@ -84,7 +96,7 @@ export default function ArchTrainer() {
 
   const resetAll = () => {
     resetUpload()
-    setExplanation(''); setUserText(''); setFeedbackText(''); setSessionId('')
+    setExplanation(null); setUserText(''); setFeedback(null); setSessionId('')
     setStep(new Set(['upload']))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -98,18 +110,6 @@ export default function ArchTrainer() {
           70%  { box-shadow: 0 0 0 10px rgba(177,156,217,0); }
           100% { box-shadow: 0 0 0 0 rgba(177,156,217,0); }
         }
-        .md-dark p   { margin: 0 0 10px; color: var(--c-text-sub); font-size: 0.93rem; line-height: 1.85; }
-        .md-dark h1,.md-dark h2,.md-dark h3 { color: var(--c-text); margin: 14px 0 6px; font-weight: 700; }
-        .md-dark ul,.md-dark ol { padding-left: 20px; margin: 0 0 10px; }
-        .md-dark li  { color: var(--c-text-sub); font-size: 0.9rem; line-height: 1.8; margin-bottom: 4px; }
-        .md-dark strong { color: var(--c-text); }
-        .md-dark code { background: var(--c-accent-dim); color: var(--c-accent-txt); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; }
-        .md-dark table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 10px 0 14px; }
-        .md-dark th { background: var(--c-accent-dim); color: var(--c-accent-txt); padding: 8px 12px; text-align: left; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.4px; border-bottom: 1px solid var(--c-border-mid); }
-        .md-dark td { padding: 7px 12px; color: var(--c-text-sub); border-bottom: 1px solid var(--c-border); line-height: 1.6; }
-        .md-dark tr:last-child td { border-bottom: none; }
-        .md-dark blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid var(--c-accent); background: var(--c-accent-dim); border-radius: 0 6px 6px 0; }
-        .md-dark blockquote p { color: var(--c-text-sub); font-style: italic; margin: 0; }
         .reselect-btn { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.72); color: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 1px 6px rgba(0,0,0,0.1); transition: background 0.2s; }
         .dark .reselect-btn { background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.82); border-color: rgba(255,255,255,0.12); }
         .reselect-btn:hover { background: rgba(255,255,255,0.9); }
@@ -182,24 +182,11 @@ export default function ArchTrainer() {
           </div>
         </Card>
 
-        {/* Step 2 — AI Explanation */}
-        {step.has('explanation') && (
-          <Card>
-            <CardTitle step={2}>AI 설명</CardTitle>
-            <div className="md-dark"><ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown></div>
-            <div style={{ marginTop: 16 }}>
-              <Btn primary onClick={() => { setUserText(''); setStep(prev => { const s = new Set(prev); s.delete('feedback'); return new Set([...s, 'train']) }) }}>
-                직접 설명해보기 →
-              </Btn>
-            </div>
-          </Card>
-        )}
-
-        {/* Step 3 — User Input */}
+        {/* Step 2 — User Input */}
         {step.has('train') && (
           <Card>
-            <CardTitle step={3}>내 설명 입력</CardTitle>
-            <p style={{ fontSize: '0.85rem', color: C.textMuted, marginBottom: 12 }}>AI 설명을 보지 말고, 이 아키텍처를 내 말로 설명해보세요.</p>
+            <CardTitle step={2}>직접 설명해보기</CardTitle>
+            <p style={{ fontSize: '0.85rem', color: C.textMuted, marginBottom: 12 }}>준비됐습니다. 먼저 직접 설명해보세요.</p>
             <textarea
               value={userText}
               onChange={e => setUserText(e.target.value)}
@@ -217,30 +204,40 @@ export default function ArchTrainer() {
                 transition: 'box-shadow 0.2s',
               }}
             />
-            <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
+            <div style={{ marginTop: 14 }}>
               <Btn primary disabled={loadingFeedback} onClick={doFeedback} loading={loadingFeedback}>
                 {loadingFeedback ? '피드백 생성 중...' : '피드백 받기'}
-              </Btn>
-              <Btn ghost onClick={() => setStep(prev => {
-                const s = new Set(prev)
-                s.has('explanation') ? s.delete('explanation') : s.add('explanation')
-                return s
-              })}>
-                AI 설명 {step.has('explanation') ? '숨기기' : '보기'}
               </Btn>
             </div>
           </Card>
         )}
 
-        {/* Step 4 — Feedback */}
-        {step.has('feedback') && (
+        {/* Step 3 — AI Explanation + Feedback */}
+        {step.has('feedback') && explanation && feedback && (
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', color: C.textMuted }}>피드백</span>
-              <span style={{ background: C.greenDim, color: C.green, borderRadius: 20, padding: '2px 10px', fontSize: '0.76rem', fontWeight: 700 }}>AI 채점</span>
+            <CardTitle step={3}>분석 결과</CardTitle>
+
+            {/* AI 설명 */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: C.textMuted, marginBottom: 10 }}>AI 설명</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {(Object.keys(SECTION_LABELS) as (keyof ExplanationJSON)[]).map(key => (
+                  <SectionBlock key={key} label={SECTION_LABELS[key]} content={explanation[key]} />
+                ))}
+              </div>
             </div>
-            <div className="md-dark"><ReactMarkdown remarkPlugins={[remarkGfm]}>{feedbackText}</ReactMarkdown></div>
-            <p style={{ fontSize: '0.82rem', color: C.textMuted, marginTop: 14 }}>더 잘 설명할 수 있을 것 같으면 다시 도전해보세요.</p>
+
+            {/* 피드백 */}
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: C.textMuted, marginBottom: 10 }}>피드백</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {(Object.keys(FEEDBACK_LABELS) as (keyof FeedbackJSON)[]).map(key => (
+                  <SectionBlock key={key} label={FEEDBACK_LABELS[key]} content={feedback[key]} />
+                ))}
+              </div>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: C.textMuted, marginTop: 16 }}>더 잘 설명할 수 있을 것 같으면 다시 도전해보세요.</p>
             <div style={{ marginTop: 14, display: 'flex', gap: 10 }}>
               <Btn ghost onClick={() => { setUserText(''); setStep(prev => { const s = new Set(prev); s.delete('feedback'); return s }) }}>다시 설명하기</Btn>
               <Btn onClick={resetAll}>새 논문 업로드</Btn>
@@ -248,6 +245,17 @@ export default function ArchTrainer() {
           </Card>
         )}
       </div>
+    </div>
+  )
+}
+
+function SectionBlock({ label, content }: { label: string; content: string }) {
+  return (
+    <div style={{ borderRadius: 8, padding: '10px 14px', background: 'var(--c-card)' }}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6, color: 'var(--c-accent-txt)' }}>
+        {label}
+      </div>
+      <p style={{ fontSize: '0.9rem', color: 'var(--c-text-sub)', lineHeight: 1.75, margin: 0 }}>{content}</p>
     </div>
   )
 }

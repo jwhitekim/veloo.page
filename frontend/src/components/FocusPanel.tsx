@@ -121,6 +121,14 @@ export default function FocusPanel({
               onChange={e => setEditName(e.target.value)}
               className="w-full text-[15px] font-semibold border-b pb-1 outline-none border-[#1d9e75] bg-transparent text-gray-900 dark:text-gray-100"
             />
+            <textarea
+              value={editMemo}
+              onChange={e => setEditMemo(e.target.value)}
+              rows={3}
+              placeholder="메모 · 맥락"
+              className="w-full border rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#1d9e75] resize-none bg-transparent text-gray-700 dark:text-gray-300"
+              style={{ borderColor: 'var(--input-border)' }}
+            />
             <div className="flex gap-3">
               <select
                 value={editPriority}
@@ -179,18 +187,7 @@ export default function FocusPanel({
 
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
         {/* Memo */}
-        {editMode ? (
-          <div>
-            <SectionHeader label="메모 · 맥락" />
-            <textarea
-              value={editMemo}
-              onChange={e => setEditMemo(e.target.value)}
-              rows={4}
-              className="w-full border rounded-lg px-3 py-2 text-[13px] outline-none focus:border-[#1d9e75] resize-none bg-transparent text-gray-700 dark:text-gray-300"
-              style={{ borderColor: 'var(--input-border)' }}
-            />
-          </div>
-        ) : todo.memo ? (
+        {todo.memo ? (
           <div>
             <SectionHeader label="메모 · 맥락" />
             <p

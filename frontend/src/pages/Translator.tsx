@@ -37,8 +37,18 @@ export default function Translator() {
   const cachedSelRef = useRef('')
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
+  const WORD_THRESHOLD = 3
+
   const doTranslate = useCallback(async (text: string) => {
     if (!text.trim()) return
+    const wordCount = text.trim().split(/\s+/).length
+    if (wordCount <= WORD_THRESHOLD) {
+      window.open(
+        `https://dict.naver.com/search.dict?query=${encodeURIComponent(text)}`,
+        '_blank'
+      )
+      return
+    }
     setTranslating(true)
     setError('')
     try {
@@ -170,7 +180,7 @@ export default function Translator() {
                     {result.related && result.related.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
                         {result.related.map((r, i) => (
-                          <span key={i} style={{ padding: '3px 10px', background: C.accentDim, color: C.accentText, borderRadius: 20, fontSize: '0.76rem', fontWeight: 600 }}>
+                          <span key={i} style={{ padding: '3px 10px', background: 'var(--tag-bg, #ede9fe)', color: 'var(--tag-text, #3b1f8c)', borderRadius: 20, fontSize: '0.76rem', fontWeight: 600 }}>
                             {r}
                           </span>
                         ))}

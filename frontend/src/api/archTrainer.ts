@@ -1,6 +1,19 @@
 const BASE = '/arch-trainer'
 
-export async function explain(image: File): Promise<{ session_id: string; explanation: string }> {
+export interface ExplanationJSON {
+  overview: string
+  modules: string
+  data_flow: string
+  contribution: string
+}
+
+export interface FeedbackJSON {
+  correct: string
+  missing: string
+  suggestion: string
+}
+
+export async function explain(image: File): Promise<{ session_id: string; explanation: ExplanationJSON }> {
   const fd = new FormData()
   fd.append('image', image)
   const res = await fetch(`${BASE}/api/explain`, { method: 'POST', body: fd })
@@ -9,7 +22,7 @@ export async function explain(image: File): Promise<{ session_id: string; explan
   return data
 }
 
-export async function feedback(sessionId: string, userExplanation: string): Promise<{ feedback: string }> {
+export async function feedback(sessionId: string, userExplanation: string): Promise<{ feedback: FeedbackJSON }> {
   const res = await fetch(`${BASE}/api/feedback`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
