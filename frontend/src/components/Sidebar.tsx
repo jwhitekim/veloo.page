@@ -5,6 +5,7 @@ interface Props {
   filter: NavFilter
   onFilter: (f: NavFilter) => void
   todos: Todo[]
+  onNavigate: () => void
 }
 
 const navItems: { label: string; key: NavFilter }[] = [
@@ -14,7 +15,7 @@ const navItems: { label: string; key: NavFilter }[] = [
   { label: '메모', key: 'memo' },
 ]
 
-export default function Sidebar({ filter, onFilter, todos }: Props) {
+export default function Sidebar({ filter, onFilter, todos, onNavigate }: Props) {
   const count = (key: NavFilter) => {
     if (key === 'today') {
       const today = dayjs().format('YYYY-MM-DD')
@@ -55,6 +56,15 @@ export default function Sidebar({ filter, onFilter, todos }: Props) {
           </button>
         ))}
       </nav>
+
+      <div className="px-2 pb-4">
+        <button
+          onClick={onNavigate}
+          className="w-full flex items-center px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-gray-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+        >
+          ← Home
+        </button>
+      </div>
 
     </aside>
   )

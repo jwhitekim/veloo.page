@@ -104,15 +104,7 @@ export default function TodoPage() {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
-      {/* Home button */}
-      <button
-        onClick={() => navigate('/')}
-        style={{ position: 'fixed', top: 12, right: 12, zIndex: 9999, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '4px 10px', color: '#ccc', fontSize: '0.78rem', cursor: 'pointer', backdropFilter: 'blur(4px)' }}
-      >
-        ← Home
-      </button>
-
-      <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
+      <Sidebar filter={filter} onFilter={setFilter} todos={todos} onNavigate={() => navigate('/')} />
 
       <TodoList
         todos={todos}
