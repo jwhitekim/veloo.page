@@ -1,9 +1,39 @@
-from datetime import datetime, timezone
+from datetime import datetime, date, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 from database import get_supabase
 import schemas
+from dateutil import parser as dateutil_parser
+
+
+def _parse_deadline(text: str) -> date | None:
+    if not text or not text.strip():
+        return None
+    text = text.strip()
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+
+    if "오늘" in text:
+        return today
+    if "내일" in text:
+        return today + timedelta(days=1)
+
+    weekday_map = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
+    for kr, wd in weekday_map.items():
+        if kr + "요일" in text:
+            return monday + timedelta(days=wd)
+
+    try:
+        return dateutil_parser.parse(text, fuzzy=True).date()
+    except Exception:
+        return None
+
+
+def _this_week_range() -> tuple[date, date]:
+    today = datetime.now().date()
+    monday = today - timedelta(days=today.weekday())
+    return monday, monday + timedelta(days=6)
 
 router = APIRouter(prefix="/api/todos", tags=["todos"])
 
@@ -32,6 +62,14 @@ def get_todos(filter: Optional[str] = None, sb: Client = Depends(get_supabase)):
         res = query.order("created_at", desc=True).execute()
 
     todos = [_sort_steps(t) for t in (res.data or [])]
+
+    if filter == "week":
+        monday, sunday = _this_week_range()
+        todos = [
+            t for t in todos
+            if (d := _parse_deadline(t.get("deadline") or "")) is not None
+            and monday <= d <= sunday
+        ]
 
     if filter == "today":
         today = datetime.now(timezone.utc).date().isoformat()
