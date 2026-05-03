@@ -4,57 +4,67 @@
 
 /* ── CSS variables (light / dark) ─────────────────────────── */
 :root {
-  /* Todo-specific (existing) */
-  --bg:           #f8f8f7;
-  --panel:        #ffffff;
-  --list:         #f3f3f1;
+  /* Todo-specific */
+  --bg:           #f4f1ea;
+  --panel:        #faf7f0;
+  --list:         #ece8dd;
   --border:       rgba(0, 0, 0, 0.08);
-  --input-border: rgba(0, 0, 0, 0.15);
+  --input-border: rgba(0, 0, 0, 0.13);
 
   /* Global app tokens */
-  --c-bg:         #f8f8fb;
-  --c-surface:    #ffffff;
-  --c-card:       #f2f2f8;
-  --c-sidebar:    #f0f0f5;
-  --c-header:     #f5f5fa;
+  --c-bg:         #f4f1ea;
+  --c-surface:    #faf7f0;
+  --c-card:       #ede9de;
+  --c-sidebar:    #eae6db;
+  --c-header:     #f7f4ed;
   --c-border:     rgba(0, 0, 0, 0.07);
-  --c-border-mid: rgba(0, 0, 0, 0.10);
-  --c-accent:     #9b87c7;
-  --c-accent-dim: rgba(177, 156, 217, 0.12);
-  --c-accent-txt: #6d4ab5;
+  --c-border-mid: rgba(0, 0, 0, 0.11);
+  --c-accent:     #1a5276;
+  --c-accent-dim: rgba(26, 82, 118, 0.10);
+  --c-accent-txt: #154360;
   --c-text:       rgba(0, 0, 0, 0.84);
-  --c-text-sub:   rgba(0, 0, 0, 0.55);
-  --c-text-muted: rgba(0, 0, 0, 0.38);
-  --c-green:      #16a34a;
-  --c-green-dim:  rgba(22, 163, 74, 0.10);
-  --c-error:      #dc2626;
+  --c-text-sub:   rgba(0, 0, 0, 0.54);
+  --c-text-muted: rgba(0, 0, 0, 0.36);
+  --c-green:      #16763e;
+  --c-green-dim:  rgba(22, 118, 62, 0.12);
+  --c-error:      #c0392b;
+
+  /* Login button */
+  --c-login-btn:      rgba(26, 82, 118, 0.88);
+  --c-login-btn-off:  rgba(26, 82, 118, 0.35);
+  --c-login-btn-text: #ffffff;
 }
 
 .dark {
-  /* Todo-specific (existing) */
-  --bg:           #141414;
-  --panel:        #1c1c1c;
-  --list:         #181818;
+  /* Todo-specific */
+  --bg:           #06080e;
+  --panel:        #0c0f1a;
+  --list:         #08091a;
   --border:       rgba(255, 255, 255, 0.07);
   --input-border: rgba(255, 255, 255, 0.12);
 
   /* Global app tokens */
-  --c-bg:         #0f0f14;
-  --c-surface:    #16161d;
-  --c-card:       #1c1c26;
-  --c-sidebar:    #111118;
-  --c-header:     #0e0e15;
+  --c-bg:         #06080e;
+  --c-surface:    #0c0f1a;
+  --c-card:       #111626;
+  --c-sidebar:    #08091a;
+  --c-header:     #070a16;
   --c-border:     rgba(255, 255, 255, 0.07);
   --c-border-mid: rgba(255, 255, 255, 0.10);
-  --c-accent:     #B19CD9;
-  --c-accent-dim: rgba(177, 156, 217, 0.13);
-  --c-accent-txt: #c4b5fd;
-  --c-text:       rgba(255, 255, 255, 0.82);
+  --c-accent:     #48bfe3;
+  --c-accent-dim: rgba(72, 191, 227, 0.12);
+  --c-accent-txt: #7dd3f0;
+  --c-text:       rgba(255, 255, 255, 0.84);
   --c-text-sub:   rgba(255, 255, 255, 0.50);
   --c-text-muted: rgba(255, 255, 255, 0.28);
-  --c-green:      #4ade80;
-  --c-green-dim:  rgba(39, 174, 96, 0.15);
+  --c-green:      #3dda74;
+  --c-green-dim:  rgba(61, 218, 116, 0.15);
   --c-error:      #f87171;
+
+  /* Login button */
+  --c-login-btn:      rgba(72, 191, 227, 0.82);
+  --c-login-btn-off:  rgba(72, 191, 227, 0.30);
+  --c-login-btn-text: #040810;
 }
 
 /* ── Base ──────────────────────────────────────────────────── */
@@ -75,7 +85,7 @@ body:not(:has(.home-root)) {
 }
 
 body:has(.home-root) {
-  background: #0a0f1e !important;
+  background: #09090b !important;
   overflow: hidden;
 }
 

@@ -37,7 +37,7 @@ export default function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'var(--c-bg)',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      fontFamily: "'IBM Plex Mono', 'Pretendard', monospace",
     }}>
       <div style={{
         width: '100%',
@@ -88,8 +88,8 @@ export default function Login() {
               fontSize: '0.88rem',
               fontWeight: 600,
               fontFamily: 'inherit',
-              background: loading || !password ? 'rgba(177,156,217,0.4)' : 'rgba(177,156,217,0.85)',
-              color: '#0f0f14',
+              background: loading || !password ? 'var(--c-login-btn-off)' : 'var(--c-login-btn)',
+              color: 'var(--c-login-btn-text)',
               border: 'none',
               borderRadius: 8,
               cursor: !password || loading ? 'not-allowed' : 'pointer',
