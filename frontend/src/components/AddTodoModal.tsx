@@ -140,7 +140,7 @@ export default function AddTodoModal({ onClose, onSave }: Props) {
             {saving ? (
               <>
                 <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                AI 생성 중...
+                저장 중...
               </>
             ) : (
               <>
