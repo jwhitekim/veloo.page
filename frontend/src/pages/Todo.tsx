@@ -50,19 +50,7 @@ export default function TodoPage() {
   const handleAdd = async (data: { name: string; memo: string; priority: Priority; deadline: string }) => {
     const todo = await addTodo(data)
     setSelectedId(todo.id)
-    try {
-      const stepsResult = await generateSteps(todo)
-      for (let i = 0; i < stepsResult.steps.length; i++) {
-        await api.addStep(todo.id, { text: stepsResult.steps[i], order_index: i })
-      }
-      const allTodos = await api.getTodos()
-      const updatedTodo = await api.generateStrategy({ todo_id: todo.id, todos: allTodos })
-      refresh(updatedTodo)
-      await reload()
-    } catch (e) {
-      console.error('AI generation failed', e)
-      await reload()
-    }
+    await reload()
   }
 
   const handleToggleStep = useCallback(async (stepId: number) => {
