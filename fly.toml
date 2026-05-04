@@ -17,8 +17,12 @@ region = "nrt"
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 0
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    timeout = "120s"
 
 [[vm]]
   memory = "512mb"
   cpu_kind = "shared"
-  cpus = 1
+  cpus = 1  
