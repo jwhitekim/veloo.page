@@ -3,12 +3,11 @@ import base64
 import json
 import os
 import re
-import uuid
 from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -18,9 +17,6 @@ app = FastAPI(title="논문 아키텍처 설명력 훈련")
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
-
-# 서버 메모리 세션 저장소: {session_id: {"explanation": str}}
-_sessions: dict[str, dict] = {}
 
 EXPLAIN_PROMPT = """\
 이 논문 아키텍처 그림을 분석해줘.
@@ -58,7 +54,7 @@ def _parse_json(text: str) -> dict:
 
 
 class FeedbackRequest(BaseModel):
-    session_id: str
+    ai_explanation: dict
     user_explanation: str
 
 
@@ -96,21 +92,11 @@ async def explain(image: UploadFile = File(...)):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
-    session_id = str(uuid.uuid4())
-    _sessions[session_id] = {"explanation": explanation_json}
-
-    return JSONResponse({
-        "session_id": session_id,
-        "explanation": explanation_json,
-    })
+    return JSONResponse({"explanation": explanation_json})
 
 
 @app.post("/api/feedback")
 async def feedback(req: FeedbackRequest):
-    session = _sessions.get(req.session_id)
-    if not session:
-        raise HTTPException(status_code=404, detail="세션을 찾을 수 없습니다. 먼저 이미지를 업로드해주세요.")
-
     try:
         msg = client.messages.create(
             model=MODEL,
@@ -120,7 +106,7 @@ async def feedback(req: FeedbackRequest):
                     "role": "user",
                     "content": FEEDBACK_PROMPT.format(
                         user_explanation=req.user_explanation,
-                        ai_explanation=json.dumps(session["explanation"], ensure_ascii=False, indent=2),
+                        ai_explanation=json.dumps(req.ai_explanation, ensure_ascii=False, indent=2),
                     ),
                 }
             ],

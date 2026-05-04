@@ -39,7 +39,6 @@ export default function ArchTrainer() {
   const navigate = useNavigate()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [sessionId, setSessionId] = useState('')
   const [explanation, setExplanation] = useState<ExplanationJSON | null>(null)
   const [userText, setUserText] = useState('')
   const [feedback, setFeedback] = useState<FeedbackJSON | null>(null)
@@ -69,7 +68,6 @@ export default function ArchTrainer() {
     setStep(new Set(['upload']))
     try {
       const data = await api.explain(imageFile)
-      setSessionId(data.session_id)
       setExplanation(data.explanation)
       show('train')
     } catch (e) {
@@ -84,7 +82,7 @@ export default function ArchTrainer() {
     setLoadingFeedback(true)
     setStep(prev => { const s = new Set(prev); s.delete('feedback'); return s })
     try {
-      const data = await api.feedback(sessionId, userText)
+      const data = await api.feedback(explanation!, userText)
       setFeedback(data.feedback)
       show('feedback')
     } catch (e) {
@@ -96,7 +94,7 @@ export default function ArchTrainer() {
 
   const resetAll = () => {
     resetUpload()
-    setExplanation(null); setUserText(''); setFeedback(null); setSessionId('')
+    setExplanation(null); setUserText(''); setFeedback(null)
     setStep(new Set(['upload']))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
