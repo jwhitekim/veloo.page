@@ -2,6 +2,7 @@
 import base64
 import json
 import os
+import re
 import uuid
 from pathlib import Path
 
@@ -51,6 +52,11 @@ FEEDBACK_PROMPT = """\
 }}"""
 
 
+def _parse_json(text: str) -> dict:
+    cleaned = re.sub(r"```(?:json)?\s*|\s*```", "", text).strip()
+    return json.loads(cleaned)
+
+
 class FeedbackRequest(BaseModel):
     session_id: str
     user_explanation: str
@@ -86,7 +92,7 @@ async def explain(image: UploadFile = File(...)):
                 }
             ],
         )
-        explanation_json = json.loads(msg.content[0].text)
+        explanation_json = _parse_json(msg.content[0].text)
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
@@ -119,7 +125,7 @@ async def feedback(req: FeedbackRequest):
                 }
             ],
         )
-        feedback_json = json.loads(msg.content[0].text)
+        feedback_json = _parse_json(msg.content[0].text)
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
