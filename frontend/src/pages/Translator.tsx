@@ -99,7 +99,10 @@ export default function Translator() {
   }
 
   const doWordSearch = () => {
-    if (wordQuery.trim()) openDict(wordQuery.trim())
+    if (wordQuery.trim()) {
+      openDict(wordQuery.trim())
+      setWordQuery('')
+    }
   }
 
   useEffect(() => {
