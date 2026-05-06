@@ -9,20 +9,19 @@ import { ThemeToggle } from './components/ThemeToggle'
 
 export default function App() {
   const location = useLocation()
-  const isHome = location.pathname === '/'
-  const isLogin = location.pathname === '/login'
+  const hideToggle = ['/', '/login'].includes(location.pathname)
 
   return (
     <>
       <Routes>
-        <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/paper" element={<PaperAnalyzer />} />
         <Route path="/translate" element={<Translator />} />
         <Route path="/arch-trainer" element={<ArchTrainer />} />
         <Route path="/todo/*" element={<Todo />} />
       </Routes>
-      {!isHome && !isLogin && <ThemeToggle />}
+      {!hideToggle && <ThemeToggle />}
     </>
   )
 }
