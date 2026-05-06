@@ -14,12 +14,16 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 
 app = FastAPI(title="Translation Studio")
 
-CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_FAST", "claude-haiku-4-5-20251001")
-_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
 
 _LONG_PROMPT = """\
-다음 영어 문장을 논문·연구 맥락에 맞는 자연스러운 한국어 학술 문체로 번역하세요.
-번역문만 출력하세요.
+다음 영어 텍스트를 한국어 AI·머신러닝 학술 논문 문체로 번역하세요.
+
+규칙:
+- attention, embedding, fine-tuning, transformer 등 관용적으로 영어를 유지하는 AI 용어는 영어 원문 그대로 두거나 괄호로 병기 (예: 어텐션(attention))
+- 수식, 변수명, 고유명사는 번역하지 말 것
+- 문장 구조를 지나치게 직역하지 말고 자연스러운 한국어 흐름으로
+- 번역문만 출력
 
 {text}"""
 
@@ -43,7 +47,7 @@ def translate(req: TranslateRequest):
     def stream():
         with _client.messages.stream(
             model=CLAUDE_MODEL,
-            max_tokens=512,
+            max_tokens=2048,
             messages=[{"role": "user", "content": _LONG_PROMPT.format(text=text)}],
         ) as s:
             for chunk in s.text_stream:
