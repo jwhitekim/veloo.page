@@ -35,11 +35,11 @@ export default function TodoList({ todos, filter, selectedId, onSelect, onToggle
   return (
     <div
       className="flex flex-col h-full border-r flex-shrink-0"
-      style={{ width, borderColor: 'var(--border)', background: 'var(--list)' }}
+      style={{ width, borderRight: '1px solid var(--border-subtle)', background: 'var(--bg-additive)' }}
     >
       <div className="px-3 pt-4 pb-2">
-        <div className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 mb-0.5">{filterLabel[filter]}</div>
-        <div className="text-[12px] text-gray-500 dark:text-gray-400">{active.length}개 진행 중</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{filterLabel[filter]}</div>
+        <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>{active.length}개 진행 중</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
@@ -77,10 +77,11 @@ export default function TodoList({ todos, filter, selectedId, onSelect, onToggle
         )}
       </div>
 
-      <div className="p-2 border-t" style={{ borderColor: 'var(--border)' }}>
+      <div className="p-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <button
           onClick={() => setShowModal(true)}
-          className="w-full flex items-center gap-1.5 px-3 py-2 text-[12px] text-gray-500 dark:text-gray-400 hover:text-[#1d9e75] hover:bg-white/60 dark:hover:bg-white/5 rounded-md transition-colors"
+          className="sidebar-item"
+          style={{ color: 'var(--text-secondary)', fontWeight: 500, gap: 6 }}
         >
           <Plus size={14} />
           할 일 추가

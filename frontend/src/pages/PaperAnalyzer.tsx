@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
+import AppHeader from '../components/AppHeader'
 import * as api from '../api/paper'
 import type { Candidate, PaperResult } from '../api/paper'
 
@@ -13,22 +14,21 @@ type MainState =
 
 // ── 색상 토큰 ──────────────────────────────────────────────────────
 const C = {
-  accent:     'var(--c-accent)',
-  accentDim:  'var(--c-accent-dim)',
-  accentText: 'var(--c-accent-txt)',
-  sidebar:    'var(--c-sidebar)',
-  main:       'var(--c-surface)',
-  card:       'var(--c-card)',
-  border:     'var(--c-border)',
-  borderMid:  'var(--c-border-mid)',
-  text:       'var(--c-text)',
-  textSub:    'var(--c-text-sub)',
-  textMuted:  'var(--c-text-muted)',
-  headerBg:   'var(--c-header)',
+  accent:     'var(--text-primary)',
+  accentDim:  'var(--bg-additive)',
+  accentText: 'var(--text-primary)',
+  sidebar:    'var(--bg-additive)',
+  main:       'var(--bg-base)',
+  card:       'var(--bg-additive)',
+  border:     'var(--border-subtle)',
+  borderMid:  'var(--border-subtle)',
+  text:       'var(--text-primary)',
+  textSub:    'var(--text-secondary)',
+  textMuted:  'var(--text-disabled)',
+  headerBg:   'var(--bg-base)',
 }
 
 export default function PaperAnalyzer() {
-  const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [state, setState] = useState<MainState>({ kind: 'idle' })
   const [sidebarData, setSidebarData] = useState<PaperResult | null>(null)
@@ -80,41 +80,38 @@ export default function PaperAnalyzer() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif", height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.main }}>
-      {/* Header */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 100, background: C.headerBg, color: '#fff', height: 64, padding: '0 28px', display: 'flex', alignItems: 'center', gap: 16, borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '4px 10px', fontSize: '0.78rem', cursor: 'pointer', color: C.textSub, flexShrink: 0 }}>← Home</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <FileText size={16} color={C.accent} strokeWidth={1.5} />
-          <span style={{ fontSize: '0.95rem', fontWeight: 600, letterSpacing: '0.3px', color: C.text }}>Paper Analyzer</span>
-        </div>
-        <div style={{ flex: 1, display: 'flex', gap: 8, maxWidth: 680, marginLeft: 'auto' }}>
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') doSearch() }}
-            placeholder="논문 제목 또는 URL (arXiv / DOI / ACM / IEEE 등) 입력"
-            autoFocus
-            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: `1.5px solid ${C.borderMid}`, borderRadius: 8, padding: '8px 14px', fontSize: '0.88rem', color: C.text, outline: 'none', fontFamily: 'inherit' }}
-          />
-          <button
-            onClick={doSearch}
-            onMouseEnter={() => setBtnHover(true)}
-            onMouseLeave={() => setBtnHover(false)}
-            style={{ background: btnHover ? '#c4b5fd' : C.accent, color: '#1a1030', border: 'none', borderRadius: 8, padding: '8px 20px', fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}
-          >
-            분석
-          </button>
-        </div>
-      </header>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.main }}>
+      <AppHeader
+        title="Paper Analyzer"
+        right={
+          <div style={{ display: 'flex', maxWidth: 580 }}>
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') doSearch() }}
+              placeholder="논문 제목 또는 URL (arXiv / DOI / ACM / IEEE 등) 입력"
+              autoFocus
+              style={{ width: 420, background: C.card, border: `1px solid ${C.border}`, borderRight: 'none', borderRadius: '9999px 0 0 9999px', padding: '8px 16px', fontSize: 14, color: C.text, outline: 'none', fontFamily: 'inherit' }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#aaaaaa')}
+              onBlur={e => (e.currentTarget.style.borderColor = C.border)}
+            />
+            <button
+              onClick={doSearch}
+              onMouseEnter={() => setBtnHover(true)}
+              onMouseLeave={() => setBtnHover(false)}
+              style={{ background: btnHover ? '#333333' : 'var(--selected-bg)', color: 'var(--selected-text)', border: 'none', borderRadius: '0 9999px 9999px 0', padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0, fontFamily: 'inherit' }}
+            >분석</button>
+          </div>
+        }
+      />
 
       {/* Body */}
       <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar */}
         <aside style={{ background: C.sidebar, color: C.text, padding: '32px 24px', overflowY: 'auto', height: '100%', borderRight: `1px solid ${C.border}` }}>
           {!sidebarData ? (
-            <p style={{ color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.8 }}>논문을 검색하면<br />기본 정보와 저널 품질이<br />여기에 표시됩니다.</p>
+            <p style={{ color: C.textSub, fontSize: 14, lineHeight: 1.8, margin: 0 }}>논문을 검색하면<br />기본 정보와 저널 품질이<br />여기에 표시됩니다.</p>
           ) : (
             <SidebarContent data={sidebarData} />
           )}
@@ -136,11 +133,13 @@ export default function PaperAnalyzer() {
 // ── Empty State ────────────────────────────────────────────────────
 function EmptyState() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 20, paddingBottom: '8vh' }}>
-      <FileText size={72} color="rgba(255,255,255,0.06)" strokeWidth={0.8} />
-      <p style={{ fontSize: '0.85rem', color: C.textMuted, textAlign: 'center', lineHeight: 1.8, maxWidth: 280 }}>
-        PDF 파일을 이곳에 드래그 앤 드롭하거나,<br />상단에서 논문을 검색하세요
-      </p>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '48px 40px', background: 'var(--bg-additive)', border: '1.5px dashed var(--border-subtle)', borderRadius: 'var(--radius-lg)', maxWidth: 320, width: '100%' }}>
+        <FileText size={48} color="var(--text-disabled)" strokeWidth={1.25} />
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
+          PDF 파일을 이곳에 드래그 앤 드롭하거나,<br />상단에서 논문을 검색하세요
+        </p>
+      </div>
     </div>
   )
 }
@@ -327,7 +326,7 @@ function AuthorCard({ author, currentTitle }: { author: PaperResult['authors'][0
           {author.topPapers.map((p, i) => {
             const isCurrent = p.title?.toLowerCase() === curTitleLower
             return (
-              <li key={i} style={{ fontSize: '0.8rem', lineHeight: 1.5, padding: '6px 0', color: C.textSub, borderTop: i > 0 ? `1px dashed rgba(255,255,255,0.05)` : 'none' }}>
+              <li key={i} style={{ fontSize: '0.8rem', lineHeight: 1.5, padding: '6px 0', color: C.textSub, borderTop: i > 0 ? `1px dashed ${C.border}` : 'none' }}>
                 {isCurrent ? <strong style={{ color: C.accentText }}>{p.title} ★</strong> : p.title}
                 {' '}<span style={{ color: C.textMuted, fontSize: '0.75rem' }}>· 인용 {p.citationCount ?? '?'}회</span>
               </li>

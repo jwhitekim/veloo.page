@@ -10,10 +10,10 @@ interface Props {
   onEdit: (id: number, name: string) => void
 }
 
-const priorityStyle: Record<string, string> = {
-  urgent: 'text-[#a32d2d] bg-[#fcebeb] dark:bg-[#3d1414] dark:text-[#f87171]',
-  mid:    'text-[#854f0b] bg-[#faeeda] dark:bg-[#2d1f08] dark:text-[#fbbf24]',
-  normal: 'text-[#0f6e56] bg-[#e1f5ee] dark:bg-[#0a2318] dark:text-[#34d399]',
+const priorityStyle: Record<string, React.CSSProperties> = {
+  urgent: { background: 'var(--selected-bg)', color: 'var(--selected-text)' },
+  mid:    { background: 'var(--bg-additive)', color: 'var(--text-primary)' },
+  normal: { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' },
 }
 
 const priorityLabel: Record<string, string> = {
@@ -66,22 +66,18 @@ export default function TodoItem({ todo, selected, onSelect, onToggle, onEdit }:
   return (
     <div
       onClick={isEditing ? undefined : onSelect}
-      style={{ transition: 'opacity 0.3s ease' }}
-      className={`group px-3 py-2.5 rounded-md cursor-pointer transition-colors ${
-        selected
-          ? 'bg-white dark:bg-[#262626] shadow-sm'
-          : 'hover:bg-white/60 dark:hover:bg-white/5'
-      } ${todo.done ? 'opacity-40' : 'opacity-100'}`}
+      style={{ transition: 'background 0.15s ease', background: selected ? 'var(--bg-additive)' : undefined }}
+      className="group px-3 py-2.5 rounded-md cursor-pointer"
     >
       <div className="flex items-start gap-2">
         <button
           onClick={handleToggle}
-          style={{ transition: 'background 0.2s ease, border-color 0.2s ease' }}
-          className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded border ${
-            todo.done
-              ? 'bg-[#1d9e75] border-[#1d9e75]'
-              : 'border-gray-300 dark:border-gray-600 hover:border-[#1d9e75]'
-          }`}
+          style={{
+            background: todo.done ? 'var(--selected-bg)' : undefined,
+            borderColor: todo.done ? 'var(--selected-bg)' : 'var(--border-subtle)',
+            transition: 'background 0.2s ease, border-color 0.2s ease',
+          }}
+          className="mt-0.5 flex-shrink-0 w-4 h-4 rounded border"
         >
           {todo.done && (
             <svg viewBox="0 0 12 10" fill="none" className="w-full h-full p-0.5">
@@ -99,11 +95,11 @@ export default function TodoItem({ todo, selected, onSelect, onToggle, onEdit }:
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${priorityStyle[todo.priority]}`}>
+            <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, fontWeight: 500, ...priorityStyle[todo.priority] }}>
               {priorityLabel[todo.priority]}
             </span>
             {todo.deadline && (
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">{todo.deadline}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-disabled)' }}>{todo.deadline}</span>
             )}
           </div>
 
@@ -115,18 +111,21 @@ export default function TodoItem({ todo, selected, onSelect, onToggle, onEdit }:
               onKeyDown={handleKeyDown}
               onBlur={commitEdit}
               onClick={e => e.stopPropagation()}
-              className="w-full mt-0.5 text-[13px] leading-snug bg-transparent border-b border-[#1d9e75] outline-none text-gray-800 dark:text-gray-200"
+              style={{ fontSize: 13, marginTop: 2, background: 'transparent', borderBottom: '1px solid var(--selected-bg)', outline: 'none', color: 'var(--text-primary)', width: '100%' }}
             />
           ) : (
-            <p className={`text-[13px] mt-0.5 leading-snug transition-all duration-300 ${
-              todo.done ? 'line-through text-gray-400 dark:text-gray-600' : 'text-gray-800 dark:text-gray-200'
-            }`}>
+            <p style={{
+              fontSize: 13, marginTop: 2, lineHeight: 1.4,
+              color: todo.done ? 'var(--text-disabled)' : 'var(--text-primary)',
+              textDecoration: todo.done ? 'line-through' : 'none',
+              textDecorationColor: 'var(--text-disabled)',
+            }}>
               {todo.name}
             </p>
           )}
 
           {totalSteps > 0 && (
-            <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-0.5">
+            <p style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 2 }}>
               단계 {completedSteps}/{totalSteps} 완료
             </p>
           )}
@@ -135,7 +134,8 @@ export default function TodoItem({ todo, selected, onSelect, onToggle, onEdit }:
         {!todo.done && !isEditing && (
           <button
             onClick={startEdit}
-            className="flex-shrink-0 mt-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-[#1d9e75]"
+            style={{ color: 'var(--text-disabled)' }}
+            className="flex-shrink-0 mt-0.5 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <Pencil size={12} />
           </button>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { NavFilter, Priority, Todo } from '../types'
 import { useTodos } from '../hooks/useTodos'
 import { useAi } from '../hooks/useAi'
+import AppHeader from '../components/AppHeader'
 import Sidebar from '../components/Sidebar'
 import TodoList from '../components/TodoList'
 import FocusPanel from '../components/FocusPanel'
@@ -91,8 +92,10 @@ export default function TodoPage() {
   }, [toggleDone])
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
-      <Sidebar filter={filter} onFilter={setFilter} todos={todos} onNavigate={() => navigate('/')} />
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+      <AppHeader />
+      <div className="flex flex-1 overflow-hidden">
+      <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
 
       <TodoList
         todos={todos}
@@ -107,13 +110,15 @@ export default function TodoPage() {
 
       <div
         onMouseDown={handleResizerMouseDown}
-        className="w-1 flex-shrink-0 cursor-col-resize hover:bg-[#1d9e75]/30 transition-colors"
-        style={{ background: 'var(--border)' }}
+        className="w-1 flex-shrink-0 cursor-col-resize transition-colors"
+        style={{ background: 'var(--border-subtle)' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive-hover)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
       />
 
       {loading && !selectedTodo ? (
-        <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--panel)' }}>
-          <span className="text-[13px] text-gray-400">불러오는 중...</span>
+        <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
+          <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>불러오는 중...</span>
         </div>
       ) : (
         <FocusPanel
@@ -130,6 +135,7 @@ export default function TodoPage() {
           generatingStrategy={generatingStrategy}
         />
       )}
+      </div>
     </div>
   )
 }

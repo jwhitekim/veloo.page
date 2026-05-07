@@ -1,20 +1,20 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { RotateCcw } from 'lucide-react'
+import AppHeader from '../components/AppHeader'
 import * as api from '../api/archTrainer'
 import type { ExplanationJSON, FeedbackJSON } from '../api/archTrainer'
 
 const C = {
-  bg:         'var(--c-bg)',
-  surface:    'var(--c-surface)',
-  card:       'var(--c-card)',
-  border:     'var(--c-border)',
-  accent:     'var(--c-accent)',
-  accentDim:  'var(--c-accent-dim)',
-  accentText: 'var(--c-accent-txt)',
-  text:       'var(--c-text)',
-  textSub:    'var(--c-text-sub)',
-  textMuted:  'var(--c-text-muted)',
+  bg:         'var(--bg-base)',
+  surface:    'var(--bg-base)',
+  card:       'var(--bg-additive)',
+  border:     'var(--border-subtle)',
+  accent:     'var(--text-primary)',
+  accentDim:  'var(--bg-additive)',
+  accentText: 'var(--text-primary)',
+  text:       'var(--text-primary)',
+  textSub:    'var(--text-secondary)',
+  textMuted:  'var(--text-disabled)',
   green:      'var(--c-green)',
   greenDim:   'var(--c-green-dim)',
   error:      'var(--c-error)',
@@ -36,7 +36,6 @@ const FEEDBACK_LABELS: Record<keyof FeedbackJSON, string> = {
 type Step = 'upload' | 'train' | 'feedback'
 
 export default function ArchTrainer() {
-  const navigate = useNavigate()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [explanation, setExplanation] = useState<ExplanationJSON | null>(null)
@@ -100,40 +99,18 @@ export default function ArchTrainer() {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", background: C.bg, minHeight: '100vh', padding: '24px 16px', color: C.text }}>
+    <div style={{ background: C.bg, minHeight: '100vh', color: C.text }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse-ring {
-          0%   { box-shadow: 0 0 0 0 rgba(177,156,217,0.4); }
-          70%  { box-shadow: 0 0 0 10px rgba(177,156,217,0); }
-          100% { box-shadow: 0 0 0 0 rgba(177,156,217,0); }
-        }
-        .reselect-btn { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255,255,255,0.72); color: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 1px 6px rgba(0,0,0,0.1); transition: background 0.2s; }
-        .dark .reselect-btn { background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.82); border-color: rgba(255,255,255,0.12); }
-        .reselect-btn:hover { background: rgba(255,255,255,0.9); }
-        .dark .reselect-btn:hover { background: rgba(0,0,0,0.8); }
+        .reselect-btn { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; cursor: pointer; background: rgba(255,255,255,0.88); color: #0f0f0f; border: 1px solid #e5e5e5; transition: background 0.15s; }
+        .reselect-btn:hover { background: #ffffff; }
+        textarea::placeholder { color: var(--text-secondary); }
       `}</style>
 
-      <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <AppHeader title="아키텍처 훈련" />
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 4 }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}`, borderRadius: 8, padding: '5px 12px', fontSize: '0.78rem', cursor: 'pointer', color: C.textMuted, transition: 'color 0.2s, background 0.2s' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.accentText; (e.currentTarget as HTMLElement).style.background = C.accentDim }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = C.textMuted; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
-          >← Home</button>
-          <div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: C.textMuted }}>
-              논문 아키텍처
-            </span>
-            <span style={{ display: 'inline-block', width: 5, height: 5, borderRadius: '50%', background: C.accent, marginLeft: 6, marginBottom: 1, verticalAlign: 'middle', opacity: 0.8 }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: C.textMuted, marginLeft: 6 }}>
-              설명력 훈련
-            </span>
-          </div>
-        </div>
+      <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+
 
         {/* Step 1 — Upload */}
         <Card>
@@ -145,21 +122,21 @@ export default function ArchTrainer() {
               onDragLeave={() => setDragOver(false)}
               onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f?.type.startsWith('image/')) setFile(f) }}
               style={{
-                border: `2px dashed ${dragOver ? C.accent : 'rgba(255,255,255,0.12)'}`,
-                borderRadius: 10,
+                border: `1.5px dashed ${dragOver ? C.accent : C.border}`,
+                borderRadius: 'var(--radius-lg)',
                 padding: '40px 20px',
                 textAlign: 'center',
                 cursor: 'pointer',
-                background: dragOver ? C.accentDim : 'transparent',
-                transition: 'border-color 0.2s, background 0.2s',
+                background: C.card,
+                transition: 'border-color 0.15s',
               }}
             >
               <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]) }} />
-              <div style={{ fontSize: '1.6rem', marginBottom: 10, opacity: 0.5 }}>📄</div>
-              <p style={{ color: C.textSub, fontSize: '0.92rem' }}>
-                <strong style={{ color: C.accentText }}>클릭하거나 이미지를 드래그</strong>해서 올려주세요
+              <div style={{ fontSize: '1.6rem', marginBottom: 10, opacity: 0.4 }}>📄</div>
+              <p style={{ color: C.textSub, fontSize: 14, margin: 0 }}>
+                <strong style={{ color: C.text }}>클릭하거나 이미지를 드래그</strong>해서 올려주세요
               </p>
-              <p style={{ marginTop: 6, fontSize: '0.78rem', color: C.textMuted }}>PNG, JPG, WEBP — 최대 10MB</p>
+              <p style={{ marginTop: 6, fontSize: 12, color: C.textMuted }}>PNG, JPG, WEBP — 최대 10MB</p>
             </div>
           ) : (
             <div style={{ position: 'relative' }}>
@@ -192,14 +169,12 @@ export default function ArchTrainer() {
               onBlur={() => setTextareaFocused(false)}
               placeholder="이 모델은... 전체적으로... 각 모듈은..."
               style={{
-                width: '100%', minHeight: 130, border: 'none', outline: 'none',
-                borderRadius: 8, padding: 14, fontSize: '0.93rem',
+                width: '100%', minHeight: 130, outline: 'none',
+                border: `1px solid ${textareaFocused ? '#aaaaaa' : C.border}`,
+                borderRadius: 'var(--radius-md)', padding: 14, fontSize: 14,
                 fontFamily: 'inherit', resize: 'vertical', lineHeight: 1.85,
                 background: C.bg, color: C.text,
-                boxShadow: textareaFocused
-                  ? `0 0 0 2px rgba(177,156,217,0.35)`
-                  : `0 0 0 1px rgba(255,255,255,0.08)`,
-                transition: 'box-shadow 0.2s',
+                transition: 'border-color 0.15s',
               }}
             />
             <div style={{ marginTop: 14 }}>
@@ -249,18 +224,18 @@ export default function ArchTrainer() {
 
 function SectionBlock({ label, content }: { label: string; content: string }) {
   return (
-    <div style={{ borderRadius: 8, padding: '10px 14px', background: 'var(--c-card)' }}>
-      <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6, color: 'var(--c-accent-txt)' }}>
+    <div style={{ borderRadius: 'var(--radius-md)', padding: '10px 14px', background: 'var(--bg-additive)' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: 6, color: 'var(--text-secondary)' }}>
         {label}
       </div>
-      <p style={{ fontSize: '0.9rem', color: 'var(--c-text-sub)', lineHeight: 1.75, margin: 0 }}>{content}</p>
+      <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.75, margin: 0 }}>{content}</p>
     </div>
   )
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--c-surface)', borderRadius: 14, padding: 24, border: '1px solid var(--c-border)' }}>
+    <div style={{ background: 'var(--bg-base)', borderRadius: 'var(--radius-lg)', padding: 24, border: '1px solid var(--border-subtle)' }}>
       {children}
     </div>
   )
@@ -272,10 +247,10 @@ function CardTitle({ step, children }: { step: number; children: React.ReactNode
       <span style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 22, height: 22, borderRadius: '50%',
-        background: 'rgba(177,156,217,0.2)', color: '#c4b5fd',
-        fontSize: '0.72rem', fontWeight: 800, marginRight: 8,
+        background: 'var(--selected-bg)', color: 'var(--selected-text)',
+        fontSize: 11, fontWeight: 700, marginRight: 8,
       }}>{step}</span>
-      <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: 'rgba(255,255,255,0.4)' }}>{children}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-primary)' }}>{children}</span>
     </div>
   )
 }
@@ -286,19 +261,18 @@ function Btn({ children, primary, ghost, disabled, loading, onClick }: {
 }) {
   const base: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 8,
-    padding: '10px 20px', borderRadius: 8,
-    fontSize: '0.88rem', fontWeight: 600,
+    padding: '8px 20px', borderRadius: 'var(--radius-md)',
+    fontSize: 14, fontWeight: 600, fontFamily: 'inherit',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.4 : 1,
-    transition: 'opacity 0.15s, background 0.15s',
+    transition: 'background 0.15s',
     border: 'none',
-    animation: loading ? 'pulse-ring 1.4s ease-out infinite' : 'none',
   }
   const variant = primary
-    ? { background: 'rgba(177,156,217,0.85)', color: '#0f0f14' }
+    ? { background: 'var(--selected-bg)', color: 'var(--selected-text)' }
     : ghost
-      ? { background: 'transparent', color: '#c4b5fd', border: '1.5px solid rgba(177,156,217,0.4)' }
-      : { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)' }
+      ? { background: 'transparent', color: 'var(--text-primary)', border: '1.5px solid var(--border-subtle)' }
+      : { background: 'var(--bg-additive)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
   return (
     <button style={{ ...base, ...variant }} disabled={disabled} onClick={onClick}>
       {loading && <Spinner />}
@@ -311,8 +285,8 @@ function Spinner() {
   return (
     <span style={{
       width: 13, height: 13,
-      border: '2px solid rgba(15,15,20,0.3)',
-      borderTopColor: '#0f0f14',
+      border: '2px solid var(--border-subtle)',
+      borderTopColor: 'var(--text-primary)',
       borderRadius: '50%',
       display: 'inline-block',
       animation: 'spin 0.7s linear infinite',

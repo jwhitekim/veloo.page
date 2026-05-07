@@ -1,32 +1,66 @@
 /* ── Root ────────────────────────────────────────────────────────────────── */
 .home-root {
-  background: #f8f8f7;
-  width: 100vw;
-  height: 100vh;
+  background: var(--bg-base);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.home-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-xl);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background: var(--bg-base);
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.home-wordmark {
+  font-size: 18px;
+  font-weight: var(--fw-bold);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* ── Main ────────────────────────────────────────────────────────────────── */
+.home-main {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 64px var(--space-xl);
 }
 
 /* ── Grid ────────────────────────────────────────────────────────────────── */
 .home-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: #e4e4e2;
-  border: 1px solid #e4e4e2;
+  column-gap: var(--space-lg);
+  row-gap: var(--space-2xl);
+  width: 80vw;
+  max-width: 1280px;
+}
+
+@media (max-width: 1024px) {
+  .home-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
 .home-card {
-  position: relative;
-  background: #f8f8f7;
-  width: 128px;
-  height: 128px;
+  background: var(--bg-base);
+  border-radius: var(--radius-lg);
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xl);
   text-decoration: none;
   transition: background 0.15s ease;
   opacity: 0;
@@ -34,47 +68,30 @@
 }
 
 .home-card:hover {
-  background: #ffffff;
-}
-
-/* ── Number ──────────────────────────────────────────────────────────────── */
-.card-num {
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  color: #c8c8c4;
+  background: var(--bg-additive);
 }
 
 /* ── Icon ────────────────────────────────────────────────────────────────── */
 .card-icon {
-  color: #b8b8b4;
-  transition: color 0.15s ease, transform 0.15s ease;
+  color: var(--text-primary);
 }
 
-.home-card:hover .card-icon {
-  color: #2a2a28;
-  transform: translateY(-2px);
+/* ── Name ────────────────────────────────────────────────────────────────── */
+.card-name {
+  font-size: 18px;
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  text-align: center;
 }
 
-/* ── Label (hidden by default, shown on hover) ───────────────────────────── */
-.card-label {
-  position: absolute;
-  bottom: 12px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: transparent;
-  transition: color 0.15s ease;
-}
-
-.home-card:hover .card-label {
-  color: #a0a09c;
+/* ── Description ─────────────────────────────────────────────────────────── */
+.card-desc {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ── Animation ───────────────────────────────────────────────────────────── */

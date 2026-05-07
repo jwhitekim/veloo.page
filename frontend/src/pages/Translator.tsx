@@ -1,26 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppHeader from '../components/AppHeader'
 import * as api from '../api/translator'
 
 const C = {
-  bg:         'var(--c-bg)',
-  surface:    'var(--c-surface)',
-  card:       'var(--c-card)',
-  border:     'var(--c-border)',
-  accent:     'var(--c-accent)',
-  accentDim:  'var(--c-accent-dim)',
-  accentText: 'var(--c-accent-txt)',
-  text:       'var(--c-text)',
-  textSub:    'var(--c-text-sub)',
-  textMuted:  'var(--c-text-muted)',
+  bg:         'var(--bg-base)',
+  surface:    'var(--bg-base)',
+  card:       'var(--bg-additive)',
+  border:     'var(--border-subtle)',
+  accent:     'var(--text-primary)',
+  accentDim:  'var(--bg-additive)',
+  accentText: 'var(--text-primary)',
+  text:       'var(--text-primary)',
+  textSub:    'var(--text-secondary)',
+  textMuted:  'var(--text-disabled)',
   error:      'var(--c-error)',
   green:      'var(--c-green)',
   greenDim:   'var(--c-green-dim)',
 }
 
 export default function Translator() {
-  const navigate = useNavigate()
-
   // Translation
   const [source, setSource] = useState('')
   const [streamedText, setStreamedText] = useState('')
@@ -158,85 +157,33 @@ export default function Translator() {
     }}>
       <style>{`
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        textarea::placeholder { color: var(--text-secondary); }
+        input::placeholder { color: var(--text-disabled); }
       `}</style>
 
-      {/* Top bar */}
-      <div style={{
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        padding: '0 20px',
-        height: 50,
-        borderBottom: `1px solid ${C.border}`,
-        background: C.surface,
-      }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${C.border}`,
-            borderRadius: 7,
-            padding: '4px 11px',
-            fontSize: '0.78rem',
-            cursor: 'pointer',
-            color: C.textMuted,
-            transition: 'color 0.2s, background 0.2s',
-            flexShrink: 0,
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = C.accentText; (e.currentTarget as HTMLElement).style.background = C.accentDim }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = C.textMuted; (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-        >← Home</button>
-
-        <span style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: C.textMuted }}>
-          Translation Studio
-        </span>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Word search */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: '0.72rem', color: C.textMuted, letterSpacing: '0.5px', flexShrink: 0 }}>단어</span>
-          <input
-            value={wordQuery}
-            onChange={e => setWordQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && doWordSearch()}
-            placeholder="단어 검색..."
-            style={{
-              width: 190,
-              padding: '5px 10px',
-              fontSize: '0.85rem',
-              background: C.bg,
-              color: C.text,
-              border: `1px solid ${C.border}`,
-              borderRadius: 7,
-              outline: 'none',
-              fontFamily: 'inherit',
-            }}
-            onFocus={e => (e.currentTarget.style.borderColor = C.accent)}
-            onBlur={e => (e.currentTarget.style.borderColor = C.border)}
-          />
-          <button
-            onClick={doWordSearch}
-            disabled={!wordQuery.trim()}
-            style={{
-              padding: '5px 13px',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              fontFamily: 'inherit',
-              background: wordQuery.trim() ? C.accentDim : 'transparent',
-              color: wordQuery.trim() ? C.accentText : C.textMuted,
-              border: `1px solid ${wordQuery.trim() ? C.accent : C.border}`,
-              borderRadius: 7,
-              cursor: wordQuery.trim() ? 'pointer' : 'not-allowed',
-              transition: 'all 0.15s',
-              flexShrink: 0,
-            }}
-          >
-            사전 검색
-          </button>
-        </div>
-      </div>
+      <AppHeader
+        title="Translation Studio"
+        right={
+          <div style={{ display: 'flex', alignItems: 'stretch' }}>
+            <input
+              value={wordQuery}
+              onChange={e => setWordQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && doWordSearch()}
+              placeholder="단어 검색..."
+              style={{ width: 180, padding: '6px 14px', fontSize: 14, background: C.card, color: C.text, border: `1px solid ${C.border}`, borderRight: 'none', borderRadius: '9999px 0 0 9999px', outline: 'none', fontFamily: 'inherit' }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#aaaaaa')}
+              onBlur={e => (e.currentTarget.style.borderColor = C.border)}
+            />
+            <button
+              onClick={doWordSearch}
+              disabled={!wordQuery.trim()}
+              style={{ padding: '6px 16px', fontSize: 14, fontWeight: 500, fontFamily: 'inherit', background: C.card, color: wordQuery.trim() ? C.text : C.textMuted, border: `1px solid ${C.border}`, borderLeft: 'none', borderRadius: '0 9999px 9999px 0', cursor: wordQuery.trim() ? 'pointer' : 'default', transition: 'background 0.15s', flexShrink: 0 }}
+              onMouseEnter={e => { if (wordQuery.trim()) (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive-hover)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = C.card }}
+            >사전 검색</button>
+          </div>
+        }
+      />
 
       {/* Main area */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
@@ -247,8 +194,8 @@ export default function Translator() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <div style={{
               padding: '8px 16px',
-              fontSize: '0.72rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-              color: C.textMuted, borderBottom: `1px solid ${C.border}`, flexShrink: 0,
+              fontSize: 12, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+              color: C.textSub, borderBottom: `1px solid ${C.border}`, flexShrink: 0,
             }}>English</div>
             <textarea
               value={source}
@@ -274,8 +221,6 @@ export default function Translator() {
                 background: 'transparent',
                 color: C.text,
                 outline: 'none',
-                boxShadow: focused ? `inset 0 0 0 2px rgba(177,156,217,0.25)` : 'none',
-                transition: 'box-shadow 0.2s',
               }}
             />
           </div>
@@ -287,8 +232,8 @@ export default function Translator() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <div style={{
               padding: '8px 16px',
-              fontSize: '0.72rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase',
-              color: C.textMuted, borderBottom: `1px solid ${C.border}`, flexShrink: 0,
+              fontSize: 12, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase',
+              color: C.textSub, borderBottom: `1px solid ${C.border}`, flexShrink: 0,
             }}>Korean</div>
             <div style={{ flex: 1, padding: 18, overflowY: 'auto' }}>
               {translating && !streamedText && (
@@ -380,7 +325,7 @@ export default function Translator() {
       {/* Context menu */}
       {ctxVisible && (
         <div
-          style={{ position: 'fixed', left: ctxPos.x, top: ctxPos.y, background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 9999, minWidth: 180, overflow: 'hidden' }}
+          style={{ position: 'fixed', left: ctxPos.x, top: ctxPos.y, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, zIndex: 9999, minWidth: 180, overflow: 'hidden' }}
           onClick={() => setCtxVisible(false)}
         >
           <button

@@ -5,7 +5,6 @@ interface Props {
   filter: NavFilter
   onFilter: (f: NavFilter) => void
   todos: Todo[]
-  onNavigate: () => void
 }
 
 const navItems: { label: string; key: NavFilter }[] = [
@@ -15,7 +14,7 @@ const navItems: { label: string; key: NavFilter }[] = [
   { label: '메모', key: 'memo' },
 ]
 
-export default function Sidebar({ filter, onFilter, todos, onNavigate }: Props) {
+export default function Sidebar({ filter, onFilter, todos }: Props) {
   const count = (key: NavFilter) => {
     if (key === 'today') {
       const today = dayjs().format('YYYY-MM-DD')
@@ -29,11 +28,11 @@ export default function Sidebar({ filter, onFilter, todos, onNavigate }: Props) 
 
   return (
     <aside
-      className="flex flex-col h-full border-r flex-shrink-0"
-      style={{ width: 160, borderColor: 'var(--border)', background: 'var(--panel)' }}
+      className="flex flex-col h-full flex-shrink-0"
+      style={{ width: 'var(--sidebar-w)', borderRight: '1px solid var(--border-subtle)', background: 'var(--bg-base)' }}
     >
-      <div className="px-4 pt-5 pb-3">
-        <div className="text-[11px] font-semibold text-gray-400 tracking-widest uppercase">PRML Lab</div>
+      <div style={{ padding: '20px 16px 12px' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>PRML Lab</div>
       </div>
 
       <nav className="flex-1 px-2">
@@ -41,30 +40,13 @@ export default function Sidebar({ filter, onFilter, todos, onNavigate }: Props) 
           <button
             key={item.key}
             onClick={() => onFilter(item.key)}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-[13px] transition-colors ${
-              filter === item.key
-                ? 'bg-[#e1f5ee] dark:bg-[#0f2e22] text-[#0f6e56] dark:text-[#1d9e75] font-medium'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5'
-            }`}
+            className={`sidebar-item${filter === item.key ? ' active' : ''}`}
           >
             <span>{item.label}</span>
-            <span className={`text-[11px] tabular-nums ${
-              filter === item.key ? 'text-[#1d9e75]' : 'text-gray-400 dark:text-gray-500'
-            }`}>
-              {count(item.key)}
-            </span>
+            <span className="sidebar-count">{count(item.key)}</span>
           </button>
         ))}
       </nav>
-
-      <div className="px-2 pb-4">
-        <button
-          onClick={onNavigate}
-          className="w-full flex items-center px-3 py-2 rounded-md text-[13px] text-gray-400 dark:text-gray-500 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-        >
-          ← Home
-        </button>
-      </div>
 
     </aside>
   )

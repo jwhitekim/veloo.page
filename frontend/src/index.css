@@ -2,48 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── CSS variables (light / dark) ─────────────────────────── */
+/* ── Design system (YouTube-style) ────────────────────────── */
 :root {
-  /* Todo-specific */
-  --bg:           #f4f1ea;
-  --panel:        #faf7f0;
-  --list:         #ece8dd;
+  /* Colors */
+  --bg-base:            #ffffff;
+  --bg-additive:        #f2f2f2;
+  --bg-additive-hover:  #e5e5e5;
+  --text-primary:       #0f0f0f;
+  --text-secondary:     #606060;
+  --text-disabled:      #909090;
+  --selected-bg:        #0f0f0f;
+  --selected-text:      #ffffff;
+  --border-subtle:      #e5e5e5;
+
+  /* Spacing */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:   12px;
+  --space-lg:   16px;
+  --space-xl:   24px;
+  --space-2xl:  40px;
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   10px;
+  --radius-lg:   12px;
+  --radius-pill: 9999px;
+
+  /* Typography */
+  --font-sans:   "Roboto", "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+  --fs-meta:     12px;
+  --fs-body:     14px;
+  --fs-title:    16px;
+  --fs-section:  20px;
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* Layout */
+  --header-h:       56px;
+  --sidebar-w:      240px;
+  --sidebar-w-mini: 72px;
+
+  /* ── Legacy aliases (Todo, Login 하위 호환) ── */
+  --bg:           #ffffff;
+  --panel:        #ffffff;
+  --list:         #f2f2f2;
   --border:       rgba(0, 0, 0, 0.08);
   --input-border: rgba(0, 0, 0, 0.13);
 
-  /* Global app tokens */
-  --c-bg:         #f4f1ea;
-  --c-surface:    #faf7f0;
-  --c-card:       #ede9de;
-  --c-sidebar:    #eae6db;
-  --c-header:     #f7f4ed;
+  --c-bg:         #ffffff;
+  --c-surface:    #ffffff;
+  --c-card:       #f2f2f2;
+  --c-sidebar:    #f2f2f2;
+  --c-header:     #ffffff;
   --c-border:     rgba(0, 0, 0, 0.07);
   --c-border-mid: rgba(0, 0, 0, 0.11);
-  --c-accent:     #1a5276;
-  --c-accent-dim: rgba(26, 82, 118, 0.10);
-  --c-accent-txt: #154360;
-  --c-text:       rgba(0, 0, 0, 0.84);
-  --c-text-sub:   rgba(0, 0, 0, 0.54);
-  --c-text-muted: rgba(0, 0, 0, 0.36);
+  --c-accent:     #0f0f0f;
+  --c-accent-dim: rgba(0, 0, 0, 0.08);
+  --c-accent-txt: #0f0f0f;
+  --c-text:       #0f0f0f;
+  --c-text-sub:   #606060;
+  --c-text-muted: #909090;
   --c-green:      #16763e;
   --c-green-dim:  rgba(22, 118, 62, 0.12);
   --c-error:      #c0392b;
 
-  /* Login button */
-  --c-login-btn:      rgba(26, 82, 118, 0.88);
-  --c-login-btn-off:  rgba(26, 82, 118, 0.35);
+  --c-login-btn:      #0f0f0f;
+  --c-login-btn-off:  rgba(0, 0, 0, 0.30);
   --c-login-btn-text: #ffffff;
 }
 
 .dark {
-  /* Todo-specific */
   --bg:           #06080e;
   --panel:        #0c0f1a;
   --list:         #08091a;
   --border:       rgba(255, 255, 255, 0.07);
   --input-border: rgba(255, 255, 255, 0.12);
 
-  /* Global app tokens */
   --c-bg:         #06080e;
   --c-surface:    #0c0f1a;
   --c-card:       #111626;
@@ -61,7 +98,6 @@
   --c-green-dim:  rgba(61, 218, 116, 0.15);
   --c-error:      #f87171;
 
-  /* Login button */
   --c-login-btn:      rgba(72, 191, 227, 0.82);
   --c-login-btn-off:  rgba(72, 191, 227, 0.30);
   --c-login-btn-text: #040810;
@@ -72,21 +108,13 @@
 
 body {
   margin: 0;
-  font-family: 'Pretendard', system-ui, sans-serif;
-  color: #1a1a1a;
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 input, textarea, select {
   color: inherit;
-}
-
-body:not(:has(.home-root)) {
-  background: var(--bg);
-}
-
-body:has(.home-root) {
-  background: #09090b !important;
-  overflow: hidden;
 }
 
 .dark body { color: #e8e8e6; }
@@ -110,3 +138,30 @@ body:has(.home-root) {
 
 /* ── Panel resizer cursor ──────────────────────────────────── */
 .is-resizing * { user-select: none; cursor: col-resize !important; }
+
+/* ── Sidebar nav items ─────────────────────────────────────── */
+.sidebar-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: left;
+  font-family: inherit;
+}
+.sidebar-item:hover { background: var(--bg-additive); }
+.sidebar-item.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+  font-weight: 500;
+}
+.sidebar-item .sidebar-count { font-size: 11px; color: var(--text-secondary); }
+.sidebar-item.active .sidebar-count { color: var(--selected-text); }
