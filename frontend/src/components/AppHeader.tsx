@@ -27,7 +27,7 @@ export default function AppHeader({ title, right }: Props) {
           background: 'transparent', border: 'none', cursor: 'pointer',
           fontSize: 18, fontWeight: 700, color: 'var(--text-primary)',
           letterSpacing: '-0.01em', padding: '6px 10px',
-          borderRadius: 'var(--radius-sm)', fontFamily: 'inherit',
+          borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)',
           transition: 'background 0.15s', flexShrink: 0,
         }}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive)' }}

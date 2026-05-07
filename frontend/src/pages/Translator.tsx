@@ -147,7 +147,7 @@ export default function Translator() {
 
   return (
     <div style={{
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      fontFamily: 'var(--font-sans)',
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
