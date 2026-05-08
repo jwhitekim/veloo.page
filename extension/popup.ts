@@ -246,7 +246,7 @@ function renderResult(data: PaperData): void {
       const paperItems    = (a.topPapers ?? []).map(p => {
         const isCurrent = p.title?.toLowerCase() === currentTitle;
         const titleHtml = isCurrent
-          ? `<strong style="color:#B19CD9;">${esc(p.title)} ★</strong>`
+          ? `<strong style="color:#0f0f0f;">${esc(p.title)} ★</strong>`
           : esc(p.title);
         return `<li>${titleHtml} <span class="cite">· 인용 ${p.citationCount ?? '?'}회</span></li>`;
       }).join('');

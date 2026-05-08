@@ -7,22 +7,20 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #16161d;
-      --sidebar: #111118;
-      --card:    #1c1c26;
-      --accent:  #B19CD9;
-      --accent-dim: rgba(177,156,217,0.14);
-      --accent-text: #c4b5fd;
-      --border:  rgba(255,255,255,0.07);
-      --text:    rgba(255,255,255,0.87);
-      --sub:     rgba(255,255,255,0.5);
-      --muted:   rgba(255,255,255,0.28);
+      --bg:     #ffffff;
+      --card:   #f2f2f2;
+      --border: #e5e5e5;
+      --text:   #0f0f0f;
+      --sub:    #606060;
+      --muted:  #909090;
+      --sel-bg: #0f0f0f;
+      --sel-tx: #ffffff;
     }
 
     body {
       width: 620px;
       min-height: 200px;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
       font-size: 14px;
       background: var(--bg);
       color: var(--text);
@@ -31,24 +29,24 @@
 
     /* ── Header ── */
     .header {
-      background: var(--sidebar);
-      color: #fff;
+      background: var(--bg);
       padding: 11px 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       border-bottom: 1px solid var(--border);
     }
 
-    .header h1 { font-size: 0.92rem; font-weight: 600; letter-spacing: 0.2px; }
+    .header .wordmark { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+    .header .sep      { font-size: 14px; color: var(--muted); margin: 0 2px; }
+    .header .page-name { font-size: 13px; font-weight: 600; color: var(--text); }
 
     .header .open-web {
       margin-left: auto;
       font-size: 0.74rem;
-      color: var(--accent-text);
+      color: var(--sub);
       cursor: pointer;
       text-decoration: underline;
-      opacity: 0.85;
     }
 
     /* ── Reset bar ── */
@@ -56,21 +54,22 @@
 
     #resetBar button {
       font-size: 0.8rem;
-      color: var(--accent-text);
+      color: var(--text);
       background: none;
-      border: 1px solid rgba(177,156,217,0.35);
+      border: 1px solid var(--border);
       border-radius: 6px;
       padding: 4px 14px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 500;
+      font-family: inherit;
       transition: background 0.15s;
     }
-    #resetBar button:hover { background: var(--accent-dim); }
+    #resetBar button:hover { background: var(--card); }
 
     /* ── Drop zone ── */
     #dropzone {
       margin: 14px 16px;
-      border: 1.5px dashed rgba(255,255,255,0.12);
+      border: 1.5px dashed var(--border);
       border-radius: 10px;
       padding: 28px 20px;
       text-align: center;
@@ -79,12 +78,12 @@
       transition: border-color 0.2s, background 0.2s;
     }
     #dropzone.over {
-      border-color: var(--accent);
-      background: var(--accent-dim);
+      border-color: var(--text);
+      background: #ebebeb;
     }
-    #dropzone .icon { font-size: 1.8rem; margin-bottom: 8px; opacity: 0.6; }
+    #dropzone .icon { font-size: 1.8rem; margin-bottom: 8px; opacity: 0.4; }
     #dropzone .hint { color: var(--muted); font-size: 0.83rem; }
-    #dropzone .hint strong { color: var(--accent-text); cursor: pointer; }
+    #dropzone .hint strong { color: var(--text); cursor: pointer; }
     #fileInput { display: none; }
 
     /* ── Status ── */
@@ -96,12 +95,12 @@
       min-height: 20px;
     }
     #status.loading {
-      color: var(--accent);
+      color: var(--text);
       padding: 32px 0 24px;
       font-size: 0.95rem;
       font-weight: 600;
     }
-    #status.error { color: #f87171; }
+    #status.error { color: #c0392b; }
 
     /* ── Result ── */
     #result { display: none; padding: 0 16px 24px; }
@@ -119,7 +118,7 @@
 
     .meta-chip {
       padding: 2px 9px;
-      background: rgba(255,255,255,0.07);
+      background: var(--card);
       border-radius: 4px;
       font-size: 0.78rem;
       color: var(--sub);
@@ -127,12 +126,13 @@
 
     .meta-row a {
       padding: 2px 9px;
-      background: var(--accent-dim);
+      background: var(--card);
       border-radius: 4px;
       font-size: 0.78rem;
-      color: var(--accent-text);
+      color: var(--text);
       text-decoration: none;
       font-weight: 500;
+      border: 1px solid var(--border);
     }
 
     /* Journal quality */
@@ -152,9 +152,9 @@
       display: flex; align-items: center; justify-content: center;
       font-weight: 800; font-size: 0.88rem; color: #fff; flex-shrink: 0;
     }
-    .q-q1 { background: var(--accent); }
-    .q-q2 { background: #8b9cf7; }
-    .q-q3 { background: #f39c12; }
+    .q-q1 { background: #16a34a; }
+    .q-q2 { background: #2563eb; }
+    .q-q3 { background: #d97706; }
     .q-q4 { background: #6b7280; }
     .q-info .q-title { font-weight: 600; font-size: 0.84rem; color: var(--text); line-height: 1.4; }
     .q-info .q-sjr  { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
@@ -163,8 +163,8 @@
     .kw-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
     .kw-tag {
       padding: 2px 10px;
-      background: var(--accent-dim);
-      color: var(--accent-text);
+      background: var(--sel-bg);
+      color: var(--sel-tx);
       border-radius: 20px;
       font-size: 0.78rem;
       font-weight: 600;
@@ -177,15 +177,15 @@
       font-size: 0.84rem; margin-bottom: 12px;
     }
     .rel-banner .label { font-weight: 800; white-space: nowrap; }
-    .rel-high { background: rgba(39,174,96,0.14);  color: #4ade80; }
-    .rel-low  { background: rgba(231,76,60,0.14);  color: #f87171; }
-    .rel-mid  { background: rgba(243,156,18,0.14); color: #fbbf24; }
+    .rel-high { background: #f0fdf4; color: #15803d; }
+    .rel-low  { background: #fef2f2; color: #dc2626; }
+    .rel-mid  { background: #fffbeb; color: #b45309; }
 
     /* Analysis items */
     .acc-item { border-left: 3px solid transparent; margin-bottom: 2px; }
-    .acc-item.prob { border-left-color: #e74c3c; }
-    .acc-item.meth { border-left-color: var(--accent); }
-    .acc-item.conc { border-left-color: #27ae60; }
+    .acc-item.prob { border-left-color: #dc2626; }
+    .acc-item.meth { border-left-color: var(--text); }
+    .acc-item.conc { border-left-color: #16a34a; }
     .acc-header {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 0 6px 13px;
@@ -207,12 +207,12 @@
     .author-item:last-child { border-bottom: none; }
     .author-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .author-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
-    .author-link { font-size: 0.76rem; color: var(--accent-text); flex-shrink: 0; text-decoration: none; }
+    .author-link { font-size: 0.76rem; color: var(--sub); flex-shrink: 0; text-decoration: underline; }
     .author-meta { font-size: 0.76rem; color: var(--muted); margin: 3px 0 5px; }
     .top-papers { list-style: none; margin-top: 7px; padding-top: 7px; border-top: 1px dashed var(--border); }
     .top-papers li {
       font-size: 0.8rem; color: var(--sub);
-      padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,0.04); line-height: 1.5;
+      padding: 5px 0; border-bottom: 1px dashed var(--border); line-height: 1.5;
     }
     .top-papers li:last-child { border-bottom: none; }
     .top-papers .cite { color: var(--muted); font-size: 0.74rem; }
@@ -231,7 +231,7 @@
     .spinner {
       display: inline-block; width: 13px; height: 13px;
       border: 2px solid var(--border);
-      border-top-color: var(--accent);
+      border-top-color: var(--text);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       vertical-align: middle; margin-left: 6px;
@@ -242,8 +242,9 @@
 <body>
 
   <div class="header">
-    <span style="font-size:1.1rem;">📄</span>
-    <h1>Paper Analyzer</h1>
+    <span class="wordmark">Lab Toolkit</span>
+    <span class="sep">›</span>
+    <span class="page-name">Paper Analyzer</span>
     <span class="open-web" id="openWeb">웹에서 열기 ↗</span>
   </div>
 
