@@ -197,7 +197,7 @@ function QualityBlock({ quality }: { quality: PaperResult['quality'] }) {
   if (!quality.quartile) return <span style={{ color: C.textMuted, fontSize: '0.82rem', lineHeight: 1.7 }}>Q 등급 없음<br /><strong style={{ color: C.textSub }}>{quality.matched_title}</strong></span>
 
   const qKey = String(quality.quartile).trim().toLowerCase()
-  const qColors: Record<string, string> = { q1: C.accent, q2: '#8b9cf7', q3: '#f39c12', q4: '#6b7280' }
+  const qColors: Record<string, string> = { q1: '#0f0f0f', q2: '#404040', q3: '#606060', q4: '#909090' }
   const bg = qColors[qKey] ?? '#6b7280'
   return (
     <>
@@ -266,14 +266,16 @@ function ResultView({ data }: { data: PaperResult }) {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderRadius: 8, marginBottom: 20, fontSize: '0.87rem', background: rel.bg, color: rel.color }}>
-          <span style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>관련성 {analysis.relevance}</span>
-          <span>{analysis.relevance_reason}</span>
-        </div>
+        {analysis.relevance && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderRadius: 8, marginBottom: 20, fontSize: '0.87rem', background: rel.bg, color: rel.color }}>
+            <span style={{ fontWeight: 800, whiteSpace: 'nowrap' }}>관련성 {analysis.relevance}</span>
+            <span>{analysis.relevance_reason}</span>
+          </div>
+        )}
 
-        <AnalysisItem color="#e74c3c"  label="문제" short="" detail={analysis.problem} />
-        <AnalysisItem color={C.accent} label="방법" short="" detail={analysis.method} />
-        <AnalysisItem color="#27ae60"  label="결론" short="" detail={analysis.conclusion} />
+        <AnalysisItem label="문제" short="" detail={analysis.problem} />
+        <AnalysisItem label="방법" short="" detail={analysis.method} />
+        <AnalysisItem label="결론" short="" detail={analysis.conclusion} />
       </section>
 
       <section style={{ marginTop: 52, paddingTop: 52, borderTop: `1px solid ${C.border}` }}>
@@ -290,9 +292,9 @@ function ResultView({ data }: { data: PaperResult }) {
   )
 }
 
-function AnalysisItem({ color, label, detail }: { color: string; label: string; short: string; detail: string }) {
+function AnalysisItem({ label, detail }: { label: string; short: string; detail: string }) {
   return (
-    <div style={{ borderLeft: `3px solid ${color}`, marginBottom: 2, borderTop: `1px solid ${C.border}` }}>
+    <div style={{ borderLeft: `3px solid ${C.accent}`, marginBottom: 2, borderTop: `1px solid ${C.border}` }}>
       <div style={{ padding: '12px 16px 4px' }}>
         <span style={{ fontSize: '0.72rem', fontWeight: 800, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</span>
       </div>
@@ -350,5 +352,5 @@ function Loader({ msg }: { msg: string }) {
 }
 
 function ErrorBox({ msg }: { msg: string }) {
-  return <div style={{ background: 'rgba(231,76,60,0.12)', border: '1px solid rgba(231,76,60,0.25)', borderRadius: 10, padding: '14px 18px', color: '#f87171', fontSize: '0.88rem' }}>❌ {msg}</div>
+  return <div style={{ background: 'var(--c-error-dim)', border: '1px solid var(--c-error)', borderRadius: 'var(--radius-md)', padding: '14px 18px', color: 'var(--c-error)', fontSize: '0.88rem' }}>❌ {msg}</div>
 }

@@ -16,7 +16,9 @@ PROMPT_TEMPLATE = """다음은 논문의 초록입니다.
   "method_short": "제안 방법 한 줄 요약",
   "method": "핵심 아이디어 및 방법론 (2~3문장, 구체적 기술 요소 포함)",
   "conclusion_short": "주요 결론 한 줄 요약",
-  "conclusion": "주요 결론 및 기여 (2~3문장, 성능 수치·비교 실험·의의 포함)"
+  "conclusion": "주요 결론 및 기여 (2~3문장, 성능 수치·비교 실험·의의 포함)",
+  "relevance": "PRML 연구실과의 관련성 (높음/중간/낮음 중 하나)",
+  "relevance_reason": "관련성 판단 근거 (1~2문장)"
 }}"""
 
 EMPTY_RESULT = {
@@ -28,6 +30,8 @@ EMPTY_RESULT = {
     "method": "초록 없음",
     "conclusion_short": "초록 없음",
     "conclusion": "초록 없음",
+    "relevance": "중간",
+    "relevance_reason": "초록 정보 없음",
 }
 
 

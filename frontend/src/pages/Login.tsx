@@ -36,19 +36,19 @@ export default function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--c-bg)',
-      fontFamily: "'IBM Plex Mono', 'Pretendard', monospace",
+      background: 'var(--bg-base)',
+      fontFamily: 'var(--font-sans)',
     }}>
       <div style={{
         width: '100%',
         maxWidth: 340,
         padding: '36px 32px',
-        background: 'var(--c-surface)',
-        border: '1px solid var(--c-border)',
-        borderRadius: 16,
+        background: 'var(--bg-base)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 'var(--radius-lg)',
       }}>
         <div style={{ marginBottom: 28, textAlign: 'center' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--c-text-muted)' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-disabled)' }}>
             Lab Toolkit
           </div>
         </div>
@@ -64,16 +64,16 @@ export default function Login() {
               width: '100%',
               padding: '10px 14px',
               fontSize: '0.93rem',
-              background: 'var(--c-bg)',
-              color: 'var(--c-text)',
-              border: '1px solid var(--c-border)',
-              borderRadius: 8,
+              background: 'var(--bg-base)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-sm)',
               outline: 'none',
               fontFamily: 'inherit',
               boxSizing: 'border-box',
             }}
-            onFocus={e => (e.currentTarget.style.borderColor = 'var(--c-accent)')}
-            onBlur={e => (e.currentTarget.style.borderColor = 'var(--c-border)')}
+            onFocus={e => (e.currentTarget.style.borderColor = 'var(--text-primary)')}
+            onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
           />
 
           {error && (

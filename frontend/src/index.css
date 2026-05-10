@@ -72,6 +72,7 @@
   --c-login-btn:      #0f0f0f;
   --c-login-btn-off:  rgba(0, 0, 0, 0.30);
   --c-login-btn-text: #ffffff;
+  --c-error-dim:      rgba(192, 57, 43, 0.08);
 }
 
 .dark {
@@ -101,6 +102,7 @@
   --c-login-btn:      rgba(72, 191, 227, 0.82);
   --c-login-btn-off:  rgba(72, 191, 227, 0.30);
   --c-login-btn-text: #040810;
+  --c-error-dim:      rgba(248, 113, 113, 0.12);
 }
 
 /* ── Base ──────────────────────────────────────────────────── */

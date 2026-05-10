@@ -116,7 +116,7 @@ export default function ArchTrainer() {
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (
-          <div style={{ padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--c-error-dim, #fef2f2)', color: C.error, fontSize: 14, border: '1px solid var(--c-error)' }}>
+          <div style={{ padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--c-error-dim)', color: C.error, fontSize: 14, border: '1px solid var(--c-error)' }}>
             {error}
           </div>
         )}
