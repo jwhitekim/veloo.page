@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import AppHeader from '../components/AppHeader'
 import * as api from '../api/translator'
 
+// 네이버 사전 API 응답의 HTML 태그를 제거하고 텍스트만 반환
+function stripHtml(html: string): string {
+  const el = document.createElement('div')
+  el.innerHTML = html
+  return el.textContent ?? ''
+}
+
 const C = {
   bg:         'var(--bg-base)',
   surface:    'var(--bg-base)',
@@ -65,7 +72,8 @@ export default function Translator() {
       })
       if (!res.ok) throw new Error(`번역 오류 (${res.status})`)
 
-      const reader = res.body!.getReader()
+      if (!res.body) throw new Error('스트리밍을 지원하지 않는 환경입니다.')
+      const reader = res.body.getReader()
       const decoder = new TextDecoder()
 
       while (true) {
@@ -299,17 +307,17 @@ export default function Translator() {
                 <div key={i} style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
                     <span style={{ fontWeight: 700, fontSize: 17, color: C.accentText }}>{item.entry}</span>
-                    <span style={{ fontSize: 13, color: C.textMuted }} dangerouslySetInnerHTML={{ __html: item.phonetic }} />
+                    <span style={{ fontSize: 13, color: C.textMuted }}>{stripHtml(item.phonetic)}</span>
                   </div>
                   {item.senses.map((s, j) => (
                     <div key={j} style={{ marginTop: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                         <span style={{ fontSize: '0.7rem', color: C.green, background: C.greenDim, padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>{s.pos}</span>
-                        <span style={{ fontSize: '0.9rem', color: C.text }} dangerouslySetInnerHTML={{ __html: s.value }} />
+                        <span style={{ fontSize: '0.9rem', color: C.text }}>{stripHtml(s.value)}</span>
                       </div>
                       {s.exampleOri && (
                         <div style={{ marginTop: 4, paddingLeft: 10, borderLeft: `2px solid ${C.border}`, fontSize: '0.78rem', lineHeight: 1.65 }}>
-                          <div style={{ color: C.textSub }} dangerouslySetInnerHTML={{ __html: s.exampleOri }} />
+                          <div style={{ color: C.textSub }}>{stripHtml(s.exampleOri)}</div>
                           <div style={{ color: C.textMuted }}>{s.exampleTrans}</div>
                         </div>
                       )}

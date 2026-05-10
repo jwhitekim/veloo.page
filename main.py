@@ -1,8 +1,10 @@
 """Lab Toolkit — 연구실 도구 모음 허브"""
+import logging
 import os
+import secrets
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -18,20 +20,34 @@ DIST = os.path.join(BASE, "frontend", "dist")
 
 ACCESS_PASSWORD = os.environ.get("ACCESS_PASSWORD")
 
+# 유효 세션 토큰 저장소 (메모리, 재시작 시 초기화)
+_sessions: set[str] = set()
+
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if not ACCESS_PASSWORD:
             return await call_next(request)
         path = request.url.path
-        if path.startswith("/login") or path.startswith("/assets"):
+        if path == "/login" or path.startswith("/assets/"):
             return await call_next(request)
-        if request.cookies.get("access_token") == ACCESS_PASSWORD:
+        if request.cookies.get("access_token") in _sessions:
             return await call_next(request)
         return RedirectResponse(url="/login")
 
 
-app = FastAPI(title="Lab Toolkit")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if not ACCESS_PASSWORD:
+        logging.warning(
+            "ACCESS_PASSWORD가 설정되지 않았습니다. "
+            "인증이 비활성화된 상태로 실행됩니다. "
+            "프로덕션 환경에서는 반드시 설정하세요."
+        )
+    yield
+
+
+app = FastAPI(title="Lab Toolkit", lifespan=lifespan)
 app.add_middleware(AuthMiddleware)
 
 
@@ -41,14 +57,16 @@ class LoginRequest(BaseModel):
 
 @app.post("/login")
 async def login(req: LoginRequest):
-    if not ACCESS_PASSWORD or req.password == ACCESS_PASSWORD:
-        response = JSONResponse({"ok": True})
-        response.set_cookie(
-            "access_token", req.password,
-            httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30,
-        )
-        return response
-    return JSONResponse({"error": "비밀번호가 틀렸습니다."}, status_code=401)
+    if ACCESS_PASSWORD and req.password != ACCESS_PASSWORD:
+        return JSONResponse({"error": "비밀번호가 틀렸습니다."}, status_code=401)
+    token = secrets.token_hex(32)
+    _sessions.add(token)
+    response = JSONResponse({"ok": True})
+    response.set_cookie(
+        "access_token", token,
+        httponly=True, samesite="lax", max_age=60 * 60 * 24 * 30, secure=True,
+    )
+    return response
 
 
 app.mount("/paper", paper_app)

@@ -44,6 +44,7 @@ export default function ArchTrainer() {
   const [step, setStep] = useState<Set<Step>>(new Set(['upload']))
   const [loadingExplain, setLoadingExplain] = useState(false)
   const [loadingFeedback, setLoadingFeedback] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState(false)
   const [textareaFocused, setTextareaFocused] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,11 +52,13 @@ export default function ArchTrainer() {
   const show = (s: Step) => setStep(prev => new Set([...prev, s]))
 
   const setFile = (file: File) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setImageFile(file)
     setPreviewUrl(URL.createObjectURL(file))
   }
 
   const resetUpload = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setImageFile(null)
     setPreviewUrl(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -64,28 +67,30 @@ export default function ArchTrainer() {
   const doExplain = async () => {
     if (!imageFile) return
     setLoadingExplain(true)
+    setError(null)
     setStep(new Set(['upload']))
     try {
       const data = await api.explain(imageFile)
       setExplanation(data.explanation)
       show('train')
     } catch (e) {
-      alert('오류: ' + (e as Error).message)
+      setError((e as Error).message)
     } finally {
       setLoadingExplain(false)
     }
   }
 
   const doFeedback = async () => {
-    if (!userText.trim()) { alert('설명을 입력해주세요.'); return }
+    if (!userText.trim()) { setError('설명을 입력해주세요.'); return }
     setLoadingFeedback(true)
+    setError(null)
     setStep(prev => { const s = new Set(prev); s.delete('feedback'); return s })
     try {
       const data = await api.feedback(explanation!, userText)
       setFeedback(data.feedback)
       show('feedback')
     } catch (e) {
-      alert('오류: ' + (e as Error).message)
+      setError((e as Error).message)
     } finally {
       setLoadingFeedback(false)
     }
@@ -110,6 +115,11 @@ export default function ArchTrainer() {
       <AppHeader title="아키텍처 훈련" />
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {error && (
+          <div style={{ padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--c-error-dim, #fef2f2)', color: C.error, fontSize: 14, border: '1px solid var(--c-error)' }}>
+            {error}
+          </div>
+        )}
 
 
         {/* Step 1 — Upload */}

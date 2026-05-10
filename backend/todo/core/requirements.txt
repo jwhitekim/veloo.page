@@ -4,3 +4,4 @@ supabase==2.10.0
 pydantic==2.10.3
 anthropic==0.40.0
 python-dotenv==1.0.1
+python-dateutil>=2.9.0

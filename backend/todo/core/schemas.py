@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List, Literal, Optional
+from pydantic import BaseModel, Field
 
 
 class StepBase(BaseModel):
@@ -58,12 +58,11 @@ class TodoOut(TodoBase):
 
 
 class GenerateStepsRequest(BaseModel):
-    todo_name: str
-    memo: str = ""
-    priority: str = "normal"
-    deadline: str = ""
+    todo_name: str = Field(..., max_length=200)
+    memo: str = Field("", max_length=1000)
+    priority: Literal["low", "normal", "high"] = "normal"
+    deadline: str = Field("", max_length=100)
 
 
 class GenerateStrategyRequest(BaseModel):
     todo_id: int
-    todos: List[dict]

@@ -60,10 +60,11 @@ def generate_strategy(req: schemas.GenerateStrategyRequest, sb: Client = Depends
         raise HTTPException(status_code=404, detail="Todo not found")
     target_name = res.data["name"]
 
+    # 클라이언트 제공 데이터 대신 DB에서 직접 조회
+    all_todos = sb.table("todos").select("name, priority, deadline, done").eq("done", False).execute()
     todos_text = "\n".join(
         f"- [{t['priority']}] {t['name']} (마감: {t.get('deadline') or '미정'})"
-        for t in req.todos
-        if not t.get("done")
+        for t in (all_todos.data or [])
     )
 
     prompt = f"""당신은 연구실의 일정 전략을 조언해주는 AI 비서입니다.

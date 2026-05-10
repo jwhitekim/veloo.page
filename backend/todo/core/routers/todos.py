@@ -90,6 +90,8 @@ def get_todo(todo_id: int, sb: Client = Depends(get_supabase)):
 @router.post("", response_model=schemas.TodoOut)
 def create_todo(todo_in: schemas.TodoCreate, sb: Client = Depends(get_supabase)):
     res = sb.table("todos").insert(todo_in.model_dump()).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Todo 생성에 실패했습니다.")
     todo = res.data[0]
     todo["steps"] = []
     return todo
@@ -120,4 +122,6 @@ def toggle_done(todo_id: int, sb: Client = Depends(get_supabase)):
 @router.post("/{todo_id}/steps", response_model=schemas.StepOut)
 def add_step(todo_id: int, step_in: schemas.StepCreate, sb: Client = Depends(get_supabase)):
     res = sb.table("steps").insert({"todo_id": todo_id, **step_in.model_dump()}).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Step 생성에 실패했습니다.")
     return res.data[0]

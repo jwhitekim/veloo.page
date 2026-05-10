@@ -21,6 +21,8 @@ def toggle_step_done(step_id: int, sb: Client = Depends(get_supabase)):
     if not current.data:
         raise HTTPException(status_code=404, detail="Step not found")
     res = sb.table("steps").update({"done": not current.data["done"]}).eq("id", step_id).execute()
+    if not res.data:
+        raise HTTPException(status_code=500, detail="Step 업데이트에 실패했습니다.")
     return res.data[0]
 
 

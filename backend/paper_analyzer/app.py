@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -19,7 +21,6 @@ from core.semantic_scholar import (
     parse_url, fetch_paper_by_url,
     fetch_paper_by_id, search_papers_by_title, enrich_authors,
 )
-from core.analyzer import current_provider
 from core.claude_analyzer import analyze_paper
 from core.journal_quality import lookup_venue
 
@@ -45,7 +46,7 @@ async def search(query: str = Form(...)):
             return JSONResponse({"type": "url", "query": query})
 
         # 제목 검색 → 후보 5개
-        results = search_papers_by_title(query, limit=5)
+        results = await asyncio.to_thread(search_papers_by_title, query, 5)
         candidates = [
             {
                 "paperId": p.get("paperId"),
@@ -56,19 +57,19 @@ async def search(query: str = Form(...)):
             }
             for p in results
         ]
-        print(candidates)
         return JSONResponse({"type": "candidates", "data": candidates})
-    except Exception as e:
-        return JSONResponse({"error": str(e)})
+    except Exception:
+        logging.exception("search error")
+        return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)
 
 
 @app.post("/analyze")
 async def analyze(paper_id: str = Form(None), url: str = Form(None)):
     try:
         if url:
-            paper = fetch_paper_by_url(url)
+            paper = await asyncio.to_thread(fetch_paper_by_url, url)
         elif paper_id:
-            paper = fetch_paper_by_id(paper_id)
+            paper = await asyncio.to_thread(fetch_paper_by_id, paper_id)
         else:
             return JSONResponse({"error": "paper_id 또는 url이 필요합니다."})
 
@@ -86,8 +87,8 @@ async def analyze(paper_id: str = Form(None), url: str = Form(None)):
         }
 
         abstract = paper.get("abstract") or ""
-        analysis = analyze_paper(abstract, title=basic["title"], doi=basic["doi"] or "")
-        authors = enrich_authors(paper)
+        analysis = await asyncio.to_thread(analyze_paper, abstract, basic["title"], basic["doi"] or "")
+        authors = await asyncio.to_thread(enrich_authors, paper)
         quality = lookup_venue(basic["venue"])
 
         if _supabase:
@@ -114,8 +115,9 @@ async def analyze(paper_id: str = Form(None), url: str = Form(None)):
             "quality": quality,
         })
 
-    except Exception as e:
-        return JSONResponse({"error": str(e)})
+    except Exception:
+        logging.exception("analyze error")
+        return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)
 
 
 @app.post("/analyze-pdf")
@@ -123,7 +125,12 @@ async def analyze_pdf(file: UploadFile = File(...)):
     try:
         from core.pdf_extractor import extract_from_pdf
 
+        if file.content_type != "application/pdf" and not (file.filename or "").lower().endswith(".pdf"):
+            return JSONResponse({"error": "PDF 파일만 지원합니다."}, status_code=400)
+
         pdf_bytes = await file.read()
+        if len(pdf_bytes) > 50 * 1024 * 1024:
+            return JSONResponse({"error": "파일이 너무 큽니다 (최대 50MB)."}, status_code=400)
         extracted = extract_from_pdf(pdf_bytes)
 
         title    = extracted.get("title", "")
@@ -141,12 +148,12 @@ async def analyze_pdf(file: UploadFile = File(...)):
 
         if arxiv_id:
             try:
-                paper = fetch_paper_by_url(f"https://arxiv.org/abs/{arxiv_id}")
+                paper = await asyncio.to_thread(fetch_paper_by_url, f"https://arxiv.org/abs/{arxiv_id}")
             except Exception:
                 pass
         if not paper and doi:
             try:
-                paper = fetch_paper_by_url(f"https://doi.org/{doi}")
+                paper = await asyncio.to_thread(fetch_paper_by_url, f"https://doi.org/{doi}")
             except Exception:
                 pass
 
@@ -159,7 +166,7 @@ async def analyze_pdf(file: UploadFile = File(...)):
             venue         = paper.get("venue", "")
             year          = paper.get("year")
             citation_count = paper.get("citationCount")
-            authors       = enrich_authors(paper)
+            authors       = await asyncio.to_thread(enrich_authors, paper)
 
         basic = {
             "title": title,
@@ -170,7 +177,7 @@ async def analyze_pdf(file: UploadFile = File(...)):
             "citationCount": citation_count,
         }
 
-        analysis = analyze_paper(abstract, title=title, doi=doi)
+        analysis = await asyncio.to_thread(analyze_paper, abstract, title, doi)
         quality  = lookup_venue(venue)
 
         if _supabase:
@@ -198,10 +205,11 @@ async def analyze_pdf(file: UploadFile = File(...)):
             "figures": figures,
         })
 
-    except Exception as e:
-        return JSONResponse({"error": str(e)})
+    except Exception:
+        logging.exception("analyze-pdf error")
+        return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)
 
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)

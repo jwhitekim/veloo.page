@@ -88,10 +88,6 @@ def parse_url(url: str) -> tuple[str, str]:
     return "unknown", url
 
 
-def is_arxiv_url(text: str) -> bool:
-    return bool(_ARXIV_RE.search(text))
-
-
 def fetch_paper_by_url(url: str) -> Optional[dict]:
     lookup_type, identifier = parse_url(url)
     if lookup_type == "arxiv":

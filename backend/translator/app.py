@@ -15,6 +15,7 @@ load_dotenv(Path(__file__).parent.parent.parent / ".env")
 app = FastAPI(title="Translation Studio")
 
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
+_client = anthropic.AsyncAnthropic()
 
 _LONG_PROMPT = """\
 다음 영어 텍스트를 한국어 AI·머신러닝 학술 논문 문체로 번역하세요.
@@ -39,18 +40,20 @@ class TranslateRequest(BaseModel):
 
 
 @app.post("/api/translate")
-def translate(req: TranslateRequest):
+async def translate(req: TranslateRequest):
     text = req.text.strip()
     if not text:
         return JSONResponse({"error": "텍스트가 비어 있습니다."}, status_code=400)
 
-    def stream():
-        with _client.messages.stream(
+    prompt = _LONG_PROMPT.replace("{text}", text)
+
+    async def stream():
+        async with _client.messages.stream(
             model=CLAUDE_MODEL,
             max_tokens=2048,
-            messages=[{"role": "user", "content": _LONG_PROMPT.format(text=text)}],
+            messages=[{"role": "user", "content": prompt}],
         ) as s:
-            for chunk in s.text_stream:
+            async for chunk in s.text_stream:
                 yield chunk
 
     return StreamingResponse(stream(), media_type="text/plain; charset=utf-8")
@@ -112,4 +115,4 @@ def naver_dict(query: str = ""):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
