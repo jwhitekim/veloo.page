@@ -24,6 +24,9 @@ ACCESS_PASSWORD = os.environ.get("ACCESS_PASSWORD")
 _sessions: set[str] = set()
 
 
+_API_PREFIXES = ("/paper/", "/translate/", "/arch-trainer/", "/todo/")
+
+
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if not ACCESS_PASSWORD:
@@ -33,6 +36,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.cookies.get("access_token") in _sessions:
             return await call_next(request)
+        if any(path.startswith(p) for p in _API_PREFIXES):
+            return JSONResponse({"error": "Unauthorized"}, status_code=401)
         return RedirectResponse(url="/login")
 
 
