@@ -58,6 +58,9 @@ async def search(query: str = Form(...)):
             for p in results
         ]
         return JSONResponse({"type": "candidates", "data": candidates})
+    except (PermissionError, ConnectionError) as e:
+        logging.warning("search external error: %s", e)
+        return JSONResponse({"error": str(e)}, status_code=502)
     except Exception:
         logging.exception("search error")
         return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)

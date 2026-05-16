@@ -20,11 +20,27 @@ export interface PaperResult {
   quality: { quartile: string; matched_title: string; sjr: string; type: string; country: string } | null
 }
 
+async function checkRes(res: Response, label: string): Promise<void> {
+  if (res.ok) return
+  if (res.status === 401) {
+    window.location.href = '/login'
+    throw new Error('세션이 만료됐습니다. 다시 로그인해주세요.')
+  }
+  let detail = ''
+  try {
+    const body = await res.json()
+    detail = body?.error ?? JSON.stringify(body)
+  } catch {
+    detail = await res.text().catch(() => '')
+  }
+  throw new Error(`${label} (${res.status})${detail ? ': ' + detail : ''}`)
+}
+
 export async function search(query: string): Promise<{ type: string; query?: string; data?: Candidate[]; error?: string }> {
   const fd = new FormData()
   fd.append('query', query)
   const res = await fetch(`${BASE}/search`, { method: 'POST', body: fd })
-  if (!res.ok) throw new Error(`검색 오류 (${res.status})`)
+  await checkRes(res, '검색 오류')
   return res.json()
 }
 
@@ -32,7 +48,7 @@ export async function analyzeById(paperId: string): Promise<PaperResult> {
   const fd = new FormData()
   fd.append('paper_id', paperId)
   const res = await fetch(`${BASE}/analyze`, { method: 'POST', body: fd })
-  if (!res.ok) throw new Error(`분석 오류 (${res.status})`)
+  await checkRes(res, '분석 오류')
   return res.json()
 }
 
@@ -40,7 +56,7 @@ export async function analyzeByUrl(url: string): Promise<PaperResult> {
   const fd = new FormData()
   fd.append('url', url)
   const res = await fetch(`${BASE}/analyze`, { method: 'POST', body: fd })
-  if (!res.ok) throw new Error(`분석 오류 (${res.status})`)
+  await checkRes(res, '분석 오류')
   return res.json()
 }
 
@@ -48,6 +64,6 @@ export async function analyzePdf(file: File): Promise<PaperResult & { figures: u
   const fd = new FormData()
   fd.append('file', file)
   const res = await fetch(`${BASE}/analyze-pdf`, { method: 'POST', body: fd })
-  if (!res.ok) throw new Error(`PDF 분석 오류 (${res.status})`)
+  await checkRes(res, 'PDF 분석 오류')
   return res.json()
 }

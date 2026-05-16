@@ -9,6 +9,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!password) return
     setLoading(true)
     setError('')
     try {
@@ -56,8 +57,11 @@ export default function Login() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <input
             type="password"
+            name="password"
+            autoComplete="current-password"
             value={password}
             onChange={e => setPassword(e.target.value)}
+            onInput={e => setPassword((e.target as HTMLInputElement).value)}
             placeholder="비밀번호"
             autoFocus
             style={{
@@ -82,7 +86,7 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={!password || loading}
+            disabled={loading}
             style={{
               padding: '10px',
               fontSize: '0.88rem',
@@ -92,7 +96,7 @@ export default function Login() {
               color: 'var(--c-login-btn-text)',
               border: 'none',
               borderRadius: 8,
-              cursor: !password || loading ? 'not-allowed' : 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'background 0.15s',
             }}
           >

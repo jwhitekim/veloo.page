@@ -43,6 +43,8 @@ def _get(path: str, params: dict) -> requests.Response:
         wait = 2 ** attempt
         time.sleep(wait)
 
+    if resp.status_code == 401:
+        raise PermissionError("Semantic Scholar API 인증 오류 (401) — S2_API_KEY가 유효하지 않습니다.")
     if resp.status_code == 403:
         raise PermissionError("Semantic Scholar API 접근 거부 (403) — .env에 S2_API_KEY를 설정하세요.")
     if resp.status_code == 429:

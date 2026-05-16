@@ -36,8 +36,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         if request.cookies.get("access_token") in _sessions:
             return await call_next(request)
+        # API 경로: redirect 대신 401 JSON 반환 (fetch redirect 오동작 방지)
         if any(path.startswith(p) for p in _API_PREFIXES):
-            return JSONResponse({"error": "Unauthorized"}, status_code=401)
+            return JSONResponse({"error": "세션이 만료됐습니다. 다시 로그인해주세요."}, status_code=401)
         return RedirectResponse(url="/login")
 
 
