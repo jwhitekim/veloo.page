@@ -164,12 +164,12 @@ export default function Translator() {
 
   return (
     <div style={{
-      fontFamily: 'var(--font-sans)',
-      height: '100vh',
       display: 'flex',
       flexDirection: 'column',
+      height: '100vh',
       overflow: 'hidden',
-      background: '#f8f9fa',
+      background: '#ffffff',
+      fontFamily: 'var(--font-sans)',
       color: '#202124',
     }}>
       <style>{`
@@ -220,7 +220,7 @@ export default function Translator() {
         .gt-dict-entry:hover { background: #f8f9fa; }
       `}</style>
 
-      {/* AppHeader — full width */}
+      {/* 헤더 — 전체 너비 */}
       <AppHeader
         title="번역"
         right={
@@ -241,17 +241,15 @@ export default function Translator() {
         }
       />
 
-      {/* Body: translation area + dict panel side by side */}
-      <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+      {/* 바디 */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
 
-        {/* ── Left: translation area ── */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-
-          {/* Language bar */}
+          {/* 언어 바 — 전체 너비 */}
           <div style={{
-            background: '#fff', borderBottom: '1px solid #dadce0',
             display: 'flex', alignItems: 'center',
-            padding: '0 16px', height: 52, flexShrink: 0,
+            padding: '0 16px', height: 52,
+            borderBottom: '1px solid #dadce0',
+            flexShrink: 0, background: '#ffffff',
           }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
               <button className="gt-lang-btn">언어 감지</button>
@@ -274,123 +272,126 @@ export default function Translator() {
             </div>
           </div>
 
-          {/* Source + Target panels — fill remaining height */}
+          {/* 패널 영역 */}
           <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
 
-            {/* Source panel */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f8f9fa', minWidth: 0 }}>
-              <textarea
-                className="gt-source-ta"
-                value={source}
-                onChange={e => handleInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && e.ctrlKey) {
-                    e.preventDefault()
-                    clearTimeout(timerRef.current)
-                    doTranslate(source)
-                  }
-                }}
-                placeholder="텍스트 입력"
-                style={{
-                  flex: 1, border: 'none', resize: 'none',
-                  padding: '24px', fontSize: 20, lineHeight: 1.75,
-                  fontFamily: 'inherit', background: 'transparent',
-                  color: '#202124', outline: 'none',
-                }}
-              />
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '8px 16px 12px', flexShrink: 0,
-                borderTop: '1px solid #dadce0', background: '#f8f9fa',
-              }}>
-                <span style={{ fontSize: 12, color: '#80868b' }}>
-                  {source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
-                </span>
-                {source && (
-                  <button className="gt-icon-btn" onClick={handleClear} title="지우기">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div style={{ width: 1, background: '#dadce0', flexShrink: 0 }} />
-
-            {/* Target panel */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', minWidth: 0 }}>
-              <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-                {sessionExpired && <SessionExpiredMessage redirectTo="/translate" />}
-                {!sessionExpired && translating && !streamedText && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                      stroke="#1a73e8" strokeWidth="2.5"
-                      style={{ animation: 'gt-spin 0.8s linear infinite', flexShrink: 0 }}>
-                      <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
-                      <path d="M12 2a10 10 0 0 1 10 10" />
-                    </svg>
-                    <span style={{ color: '#9aa0a6', fontSize: 16 }}>번역 중...</span>
-                  </div>
-                )}
-                {!sessionExpired && error && (
-                  <span style={{ color: '#d93025', fontSize: 15 }}>{error}</span>
-                )}
-                {!sessionExpired && streamedText && (
-                  <div style={{ fontSize: 20, color: '#1a73e8', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-                    {streamedText}
-                    {translating && (
-                      <span style={{
-                        display: 'inline-block', width: 2, height: '1.1em',
-                        background: '#1a73e8', marginLeft: 3,
-                        verticalAlign: 'text-bottom',
-                        animation: 'blink 0.9s step-end infinite',
-                      }} />
-                    )}
-                  </div>
-                )}
-                {!sessionExpired && !translating && !error && !streamedText && (
-                  <span style={{ color: '#80868b', fontSize: 20 }}>번역 결과</span>
-                )}
-              </div>
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                padding: '8px 16px 12px', flexShrink: 0,
-                borderTop: '1px solid #dadce0',
-              }}>
-                <button
-                  className="gt-icon-btn"
-                  onClick={handleCopy}
-                  disabled={!streamedText || translating}
-                  title={copied ? '복사됨!' : '복사'}
-                  style={{ color: copied ? '#1a73e8' : '#5f6368' }}
-                >
-                  {copied ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                  )}
+          {/* 소스 패널 */}
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            background: '#f8f9fa', borderRight: '1px solid #dadce0', minWidth: 0,
+          }}>
+            <textarea
+              className="gt-source-ta"
+              value={source}
+              onChange={e => handleInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  e.preventDefault()
+                  clearTimeout(timerRef.current)
+                  doTranslate(source)
+                }
+              }}
+              placeholder="텍스트 입력"
+              style={{
+                flex: 1, border: 'none', resize: 'none',
+                padding: '16px 24px', fontSize: 20, lineHeight: 1.75,
+                fontFamily: 'inherit', background: 'transparent',
+                color: '#202124', outline: 'none', minHeight: 0,
+              }}
+            />
+            {/* 소스 하단 바 */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0 16px', height: 44, flexShrink: 0,
+              borderTop: '1px solid #dadce0',
+            }}>
+              <span style={{ fontSize: 12, color: '#80868b' }}>
+                {source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+              </span>
+              {source && (
+                <button className="gt-icon-btn" onClick={handleClear} title="지우기">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
                 </button>
-              </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* ── Right: dict panel (독립 컬럼) ── */}
-        {dictOpen && (
+          {/* 결과 패널 */}
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            background: '#ffffff', minWidth: 0,
+          }}>
+            <div style={{ flex: 1, padding: '16px 24px', overflowY: 'auto' }}>
+              {sessionExpired && <SessionExpiredMessage redirectTo="/translate" />}
+              {!sessionExpired && translating && !streamedText && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="#1a73e8" strokeWidth="2.5"
+                    style={{ animation: 'gt-spin 0.8s linear infinite', flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
+                    <path d="M12 2a10 10 0 0 1 10 10" />
+                  </svg>
+                  <span style={{ color: '#9aa0a6', fontSize: 16 }}>번역 중...</span>
+                </div>
+              )}
+              {!sessionExpired && error && (
+                <span style={{ color: '#d93025', fontSize: 15 }}>{error}</span>
+              )}
+              {!sessionExpired && streamedText && (
+                <div style={{ fontSize: 20, color: '#1a73e8', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
+                  {streamedText}
+                  {translating && (
+                    <span style={{
+                      display: 'inline-block', width: 2, height: '1.1em',
+                      background: '#1a73e8', marginLeft: 3,
+                      verticalAlign: 'text-bottom',
+                      animation: 'blink 0.9s step-end infinite',
+                    }} />
+                  )}
+                </div>
+              )}
+              {!sessionExpired && !translating && !error && !streamedText && (
+                <span style={{ color: '#80868b', fontSize: 20 }}>번역 결과</span>
+              )}
+            </div>
+            {/* 결과 하단 바 */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+              padding: '0 16px', height: 44, flexShrink: 0,
+              borderTop: '1px solid #dadce0',
+            }}>
+              <button
+                className="gt-icon-btn"
+                onClick={handleCopy}
+                disabled={!streamedText || translating}
+                title={copied ? '복사됨!' : '복사'}
+                style={{ color: copied ? '#1a73e8' : '#5f6368' }}
+              >
+                {copied ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* ── 우측 사전 컬럼 ── */}
+          {dictOpen && (
           <div style={{
             width: 360, flexShrink: 0,
             borderLeft: '1px solid #dadce0',
-            background: '#fff',
+            background: '#ffffff',
             display: 'flex', flexDirection: 'column',
-            height: '100%',
+            overflow: 'hidden',
           }}>
-            {/* Header */}
+            {/* 사전 헤더 */}
             <div style={{ padding: '18px 18px 0', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
                 <div>
@@ -407,7 +408,7 @@ export default function Translator() {
               </div>
             </div>
 
-            {/* Tab content */}
+            {/* 탭 컨텐츠 */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px' }}>
               {dictLoading && <p style={{ color: '#9aa0a6', fontSize: 14 }}>검색 중...</p>}
               {!dictLoading && !dictResult && <p style={{ color: '#9aa0a6', fontSize: 14 }}>검색 결과 없음</p>}
@@ -442,10 +443,13 @@ export default function Translator() {
               )}
             </div>
           </div>
-        )}
+          )}
+
+          </div>{/* end 패널 영역 */}
+
       </div>
 
-      {/* Context menu */}
+      {/* 컨텍스트 메뉴 */}
       {ctxVisible && (
         <div style={{
           position: 'fixed', left: ctxPos.x, top: ctxPos.y,
