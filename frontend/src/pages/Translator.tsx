@@ -39,6 +39,14 @@ export default function Translator() {
   const cachedSelRef = useRef('')
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const abortRef = useRef<AbortController | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const autoResize = () => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = `${ta.scrollHeight}px`
+  }
 
   const doTranslate = useCallback(async (text: string) => {
     if (!text.trim()) return
@@ -115,6 +123,9 @@ export default function Translator() {
     setError('')
     setSessionExpired(false)
     setTranslating(false)
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
   }
 
   useEffect(() => {
@@ -149,6 +160,7 @@ export default function Translator() {
     const clamped = val.slice(0, MAX_CHARS)
     setSource(clamped)
     clearTimeout(timerRef.current)
+    setTimeout(autoResize, 0)
     if (clamped.trim()) {
       timerRef.current = setTimeout(() => doTranslate(clamped), 300)
     } else {
@@ -163,10 +175,9 @@ export default function Translator() {
   return (
     <div style={{
       fontFamily: 'var(--font-sans)',
-      height: '100vh',
+      minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'hidden',
       background: '#f8f9fa',
       color: '#202124',
     }}>
@@ -185,13 +196,14 @@ export default function Translator() {
         .gt-icon-btn:disabled:hover { background: none; }
         .gt-dict-row:hover { background: #f8f9fa; }
         .gt-lang-btn {
-          font-size: 14px; font-weight: 500; padding: 6px 16px;
-          border-radius: 20px; border: none; background: transparent;
+          font-size: 14px; font-weight: 500; padding: 8px 12px;
+          border: none; border-bottom: 2px solid transparent;
+          border-radius: 0; background: transparent;
           color: #5f6368; cursor: pointer; transition: background 0.15s;
           font-family: inherit;
         }
-        .gt-lang-btn:hover { background: #f1f3f4; }
-        .gt-lang-btn.active { color: #1a73e8; background: #e8f0fe; }
+        .gt-lang-btn:hover:not(.active) { background: #f1f3f4; border-radius: 4px; }
+        .gt-lang-btn.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; background: transparent; }
         .dict-title-row {
           display: flex; align-items: center;
           justify-content: space-between; margin-bottom: 16px;
@@ -203,7 +215,7 @@ export default function Translator() {
         }
         .dict-close:hover { background: #f1f3f4; }
         .dict-search-input {
-          width: 200px; padding: 7px 14px 7px 34px;
+          width: 360px; padding: 7px 14px 7px 34px;
           font-size: 14px; border: 1.5px solid #dadce0;
           border-radius: 4px; outline: none;
           background: #ffffff; color: #202124;
@@ -242,45 +254,32 @@ export default function Translator() {
 
       {/* Card */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
         margin: '16px 24px 24px',
         border: '1px solid #dadce0', borderRadius: 12,
         overflow: 'hidden', background: '#fff',
-        minHeight: 0,
       }}>
 
         {/* Language bar */}
         <div style={{
           background: '#fff',
           borderBottom: '1px solid #dadce0',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 16px',
-          height: 52,
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center',
+          padding: '0 16px', height: 52, flexShrink: 0,
         }}>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
             <button className="gt-lang-btn">언어 감지</button>
             <button className="gt-lang-btn active">영어</button>
             <button className="gt-lang-btn">일본어</button>
           </div>
-
-          <button
-            title="언어 전환 (고정)"
-            disabled
-            style={{
-              width: 40, height: 40,
-              border: '1px solid #dadce0', borderRadius: '50%',
-              background: '#fff', cursor: 'default', opacity: 0.45,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
+          <button disabled style={{
+            width: 40, height: 40, border: '1px solid #dadce0', borderRadius: '50%',
+            background: '#fff', cursor: 'default', opacity: 0.45,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368">
               <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
             </svg>
           </button>
-
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 8 }}>
             <button className="gt-lang-btn active">한국어</button>
             <button className="gt-lang-btn">영어</button>
@@ -288,17 +287,21 @@ export default function Translator() {
           </div>
         </div>
 
-        {/* Main translation area — position:relative for dict overlay */}
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
+        {/* Translation area — position:relative for dict overlay */}
+        <div style={{ position: 'relative' }}>
 
-          <div className="gt-panel-wrapper" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* Panel wrapper — auto-height, max 60vh */}
+          <div className="gt-panel-wrapper" style={{
+            display: 'flex',
+            minHeight: 240,
+            maxHeight: '60vh',
+            overflowY: 'auto',
+          }}>
 
             {/* Source panel */}
-            <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              background: '#f8f9fa', minWidth: 0,
-            }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#f8f9fa', minWidth: 0 }}>
               <textarea
+                ref={textareaRef}
                 className="gt-source-ta"
                 value={source}
                 onChange={e => handleInput(e.target.value)}
@@ -311,53 +314,29 @@ export default function Translator() {
                 }}
                 placeholder="텍스트 입력"
                 style={{
-                  flex: 1, border: 'none', resize: 'none',
-                  padding: '24px 24px 0',
+                  minHeight: 200, height: 'auto',
+                  border: 'none', resize: 'none', overflowY: 'hidden',
+                  padding: '24px 24px 16px',
                   fontSize: 20, lineHeight: 1.75,
                   fontFamily: 'inherit', background: 'transparent',
                   color: '#202124', outline: 'none',
+                  boxSizing: 'border-box', width: '100%',
                 }}
               />
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '8px 16px 14px', flexShrink: 0,
-                borderTop: '1px solid #dadce0',
-              }}>
-                <span style={{ fontSize: 12, color: '#80868b' }}>
-                  {source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
-                </span>
-                <div style={{ display: 'flex', gap: 2 }}>
-                  {source && (
-                    <button className="gt-icon-btn" onClick={handleClear} title="지우기">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
 
             {/* Divider */}
             <div className="gt-panel-divider" style={{ width: 1, background: '#dadce0', flexShrink: 0 }} />
 
             {/* Target panel */}
-            <div style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              background: '#fff', minWidth: 0,
-            }}>
-              <div style={{
-                flex: 1, padding: '24px 24px 0',
-                overflowY: 'auto', minHeight: 0,
-              }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', minWidth: 0 }}>
+              <div style={{ minHeight: 200, padding: '24px 24px 16px' }}>
                 {sessionExpired && <SessionExpiredMessage redirectTo="/translate" />}
                 {!sessionExpired && translating && !streamedText && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <svg
-                      width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                       stroke="#1a73e8" strokeWidth="2.5"
-                      style={{ animation: 'gt-spin 0.8s linear infinite', flexShrink: 0 }}
-                    >
+                      style={{ animation: 'gt-spin 0.8s linear infinite', flexShrink: 0 }}>
                       <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
                       <path d="M12 2a10 10 0 0 1 10 10" />
                     </svg>
@@ -384,34 +363,52 @@ export default function Translator() {
                   <span style={{ color: '#80868b', fontSize: 20 }}>번역 결과</span>
                 )}
               </div>
-
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                padding: '8px 16px 14px', flexShrink: 0, gap: 2,
-                borderTop: '1px solid #dadce0',
-              }}>
-                <button
-                  className="gt-icon-btn"
-                  onClick={handleCopy}
-                  disabled={!streamedText || translating}
-                  title={copied ? '복사됨!' : '복사'}
-                  style={{ color: copied ? '#1a73e8' : '#5f6368' }}
-                >
-                  {copied ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                    </svg>
-                  )}
-                </button>
-              </div>
             </div>
           </div>
 
-          {/* Dict panel — absolute overlay (이슈 1) */}
+          {/* Footer row — always visible below panels */}
+          <div style={{ display: 'flex', borderTop: '1px solid #dadce0' }}>
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 16px 12px', background: '#f8f9fa',
+            }}>
+              <span style={{ fontSize: 12, color: '#80868b' }}>
+                {source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+              </span>
+              {source && (
+                <button className="gt-icon-btn" onClick={handleClear} title="지우기">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
+              )}
+            </div>
+            <div style={{ width: 1, background: '#dadce0', flexShrink: 0 }} />
+            <div style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+              padding: '8px 16px 12px', background: '#fff',
+            }}>
+              <button
+                className="gt-icon-btn"
+                onClick={handleCopy}
+                disabled={!streamedText || translating}
+                title={copied ? '복사됨!' : '복사'}
+                style={{ color: copied ? '#1a73e8' : '#5f6368' }}
+              >
+                {copied ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  </svg>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Dict panel — absolute overlay */}
           {dictOpen && (
             <div style={{
               position: 'absolute', top: 0, right: 0,
@@ -443,17 +440,13 @@ export default function Translator() {
                     {dictResult.senses.map((s, j) => (
                       <div key={j} style={{ marginTop: 8 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                          {/* 품사 태그 — 현재 스타일 유지 */}
                           <span style={{
-                            fontSize: 11, fontWeight: 500,
-                            padding: '2px 8px', borderRadius: 4,
+                            fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4,
                             background: '#e8f0fe', color: '#1a73e8',
                           }}>{s.pos}</span>
-                          {/* 이슈 2: 레벨 태그 색상 분리 */}
                           {s.level && (
                             <span style={{
-                              fontSize: 11, fontWeight: 500,
-                              padding: '2px 8px', borderRadius: 4,
+                              fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4,
                               ...(LEVEL_STYLE[s.level] ?? LEVEL_STYLE.general),
                             }}>{s.level}</span>
                           )}
