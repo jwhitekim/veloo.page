@@ -112,7 +112,7 @@ export default function ArchTrainer() {
         textarea::placeholder { color: var(--text-secondary); }
       `}</style>
 
-      <AppHeader title="아키텍처 훈련" />
+      <AppHeader title="모델 리뷰" />
 
       <div style={{ maxWidth: 860, margin: '0 auto', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {error && (

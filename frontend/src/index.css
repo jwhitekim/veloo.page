@@ -75,35 +75,6 @@
   --c-error-dim:      rgba(192, 57, 43, 0.08);
 }
 
-.dark {
-  --bg:           #06080e;
-  --panel:        #0c0f1a;
-  --list:         #08091a;
-  --border:       rgba(255, 255, 255, 0.07);
-  --input-border: rgba(255, 255, 255, 0.12);
-
-  --c-bg:         #06080e;
-  --c-surface:    #0c0f1a;
-  --c-card:       #111626;
-  --c-sidebar:    #08091a;
-  --c-header:     #070a16;
-  --c-border:     rgba(255, 255, 255, 0.07);
-  --c-border-mid: rgba(255, 255, 255, 0.10);
-  --c-accent:     #48bfe3;
-  --c-accent-dim: rgba(72, 191, 227, 0.12);
-  --c-accent-txt: #7dd3f0;
-  --c-text:       rgba(255, 255, 255, 0.84);
-  --c-text-sub:   rgba(255, 255, 255, 0.50);
-  --c-text-muted: rgba(255, 255, 255, 0.28);
-  --c-green:      #3dda74;
-  --c-green-dim:  rgba(61, 218, 116, 0.15);
-  --c-error:      #f87171;
-
-  --c-login-btn:      rgba(72, 191, 227, 0.82);
-  --c-login-btn-off:  rgba(72, 191, 227, 0.30);
-  --c-login-btn-text: #040810;
-  --c-error-dim:      rgba(248, 113, 113, 0.12);
-}
 
 /* ── Base ──────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
@@ -119,13 +90,10 @@ input, textarea, select {
   color: inherit;
 }
 
-.dark body { color: #e8e8e6; }
-
 /* ── Scrollbar ─────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: rgba(0,0,0,0.15); border-radius: 2px; }
-.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); }
 
 /* ── Check animation ───────────────────────────────────────── */
 @keyframes checkDraw {

@@ -121,7 +121,7 @@ export default function TodoPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
-      <AppHeader />
+      <AppHeader title="할일" />
       <div className="flex flex-1 overflow-hidden">
       <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
 

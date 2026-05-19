@@ -6,7 +6,6 @@ import Translator from './pages/Translator'
 import ArchTrainer from './pages/ArchTrainer'
 import Todo from './pages/Todo'
 import Login from './pages/Login'
-import { ThemeToggle } from './components/ThemeToggle'
 
 const PAGE_TITLES: Record<string, string> = {
   '/': 'Home',
@@ -19,7 +18,6 @@ const PAGE_TITLES: Record<string, string> = {
 
 export default function App() {
   const location = useLocation()
-  const hideToggle = ['/', '/login'].includes(location.pathname)
 
   useEffect(() => {
     const base = '/' + location.pathname.split('/')[1]
@@ -28,16 +26,13 @@ export default function App() {
   }, [location.pathname])
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/paper" element={<PaperAnalyzer />} />
-        <Route path="/translate" element={<Translator />} />
-        <Route path="/arch-trainer" element={<ArchTrainer />} />
-        <Route path="/todo/*" element={<Todo />} />
-      </Routes>
-      {!hideToggle && <ThemeToggle />}
-    </>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/paper" element={<PaperAnalyzer />} />
+      <Route path="/translate" element={<Translator />} />
+      <Route path="/arch-trainer" element={<ArchTrainer />} />
+      <Route path="/todo/*" element={<Todo />} />
+    </Routes>
   )
 }

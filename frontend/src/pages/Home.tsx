@@ -3,10 +3,10 @@ import { FileText, Globe, Network, ClipboardList } from 'lucide-react'
 import './Home.css'
 
 const TOOLS = [
-  { name: '논문 분석기',  desc: 'PDF · arXiv 분석 및 저자 정보',  href: '/paper',        Icon: FileText      },
-  { name: '번역기',        desc: '영어 논문 용어를 맥락으로 번역',  href: '/translate',    Icon: Globe         },
-  { name: '아키텍처 훈련', desc: 'AI 설명 + 설명력 셀프 훈련',     href: '/arch-trainer', Icon: Network       },
-  { name: '투두',          desc: '연구실 할 일 · Supabase 동기화', href: '/todo',         Icon: ClipboardList },
+  { name: 'Paper Analyzer',  desc: 'PDF 추출 및 논문 이름 검색',  href: '/paper',        Icon: FileText      },
+  { name: 'Translator',        desc: '영어 논문 용어를 맥락으로 번역',  href: '/translate',    Icon: Globe         },
+  { name: 'Models Review', desc: '모델 설명 + AI 피드백',     href: '/arch-trainer', Icon: Network       },
+  { name: 'Todo List',          desc: '연구실 할 일', href: '/todo',         Icon: ClipboardList },
 ]
 
 export default function Home() {

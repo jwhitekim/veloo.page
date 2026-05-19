@@ -82,7 +82,7 @@ export default function PaperAnalyzer() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.main }}>
       <AppHeader
-        title="Paper Analyzer"
+        title="논문 분석기"
         right={
           <div style={{ display: 'flex', maxWidth: 580 }}>
             <input
