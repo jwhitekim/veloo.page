@@ -52,6 +52,34 @@ export default function TodoPage() {
     const todo = await addTodo(data)
     setSelectedId(todo.id)
     await reload()
+    // 백그라운드에서 AI 단계 생성 요청 후 steps 생길 때까지 폴링
+    api.generateStepsAsync({
+      todo_id: todo.id,
+      todo_name: todo.name,
+      memo: todo.memo,
+      priority: todo.priority,
+      deadline: todo.deadline,
+    }).catch(() => {});
+    // 전략 생성 (fire-and-forget)
+    ;(async () => {
+      try {
+        const allTodos = await api.getTodos()
+        const updated = await api.generateStrategy({
+          todo_id: todo.id,
+          todos: allTodos.map((t: Todo) => ({ id: t.id, name: t.name, priority: t.priority, deadline: t.deadline, done: t.done })),
+        })
+        refresh(updated)
+      } catch { /* 조용히 실패 */ }
+    })()
+    const poll = setInterval(async () => {
+      const updated = await api.getTodos()
+      const t = updated.find((t: { id: number }) => t.id === todo.id)
+      if (t && Array.isArray(t.steps) && t.steps.length > 0) {
+        clearInterval(poll)
+        await reload()
+      }
+    }, 3000)
+    setTimeout(() => clearInterval(poll), 60_000) // 1분 후 자동 중단
   }
 
   const handleToggleStep = useCallback(async (stepId: number) => {
