@@ -1,4 +1,5 @@
 """Translation Studio — FastAPI + Claude API"""
+import json
 import os
 import time
 
@@ -17,22 +18,87 @@ app = FastAPI(title="Translation Studio")
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
 _client = anthropic.AsyncAnthropic()
 
-_LONG_PROMPT = """\
-다음 영어 텍스트를 한국어 AI·머신러닝 학술 논문 문체로 번역하세요.
+# Context Layer 1: Role & Domain
+_SYSTEM_PROMPT = """\
+ROLE: AI/ML academic translator (English → Korean)
+DOMAIN: machine learning, deep learning, computer vision, NLP research papers
+REGISTER: 한국어 학술 논문 문체 (formal academic Korean)"""
 
-규칙:
-- attention, embedding, fine-tuning, transformer 등 관용적으로 영어를 유지하는 AI 용어는 영어 원문 그대로 두거나 괄호로 병기 (예: 어텐션(attention))
-- 수식, 변수명, 고유명사는 번역하지 말 것
-- 문장 구조를 지나치게 직역하지 말고 자연스러운 한국어 흐름으로
-- 번역문만 출력
+# Context Layer 2: Constraint Rules
+_RULES = """\
+PRESERVE_VERBATIM:
+  - math: equations, variables, symbols  (∇L, θ, x_i ...)
+  - identifiers: model names, dataset names, citation keys
+  - code: function names, class names
 
-{text}"""
+PRESERVE_OR_BILINGUAL:
+  - convention: attention→어텐션(attention) | embedding→임베딩(embedding)
+  - keep_english: fine-tuning, transformer, encoder, decoder,
+                  token, layer, weight, bias, gradient, loss,
+                  batch, epoch, inference, prompt, dropout
+
+STYLE:
+  - flow: natural Korean, not word-for-word
+  - structure: nominalization preferred (∼함, ∼됨, ∼임)
+  - forbidden: 직역체, 번역체 문장
+
+OUTPUT: translation only — no explanation, no prefix"""
+
+# Context Layer 3: Few-shot examples
+_EXAMPLES = """\
+EXAMPLE_1:
+  input:  "We propose a novel attention mechanism that..."
+  output: "본 논문에서는 새로운 어텐션(attention) 메커니즘을 제안하며..."
+
+EXAMPLE_2:
+  input:  "The model is fine-tuned on downstream tasks using LoRA."
+  output: "해당 모델은 LoRA를 활용하여 downstream 태스크에 fine-tuning된다."
+
+EXAMPLE_3:
+  input:  "Let x ∈ R^d be the input embedding."
+  output: "x ∈ R^d를 입력 임베딩(input embedding)이라 하자." """
 
 _NAVER_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     "Referer":    "https://en.dict.naver.com/",
     "Accept":     "application/json",
 }
+
+
+def _strip_tags(s: str) -> str:
+    return s.replace("<strong>", "").replace("</strong>", "")
+
+
+def _extract_oxford_entry(data: dict) -> dict | None:
+    try:
+        exp_only = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["expOnly"]
+        return json.loads(exp_only)
+    except (KeyError, IndexError, json.JSONDecodeError):
+        return None
+
+
+def _parse_oxford_entry(raw: dict, data: dict, query: str) -> dict:
+    try:
+        symbol_list = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["searchPhoneticSymbolList"]
+        phonetic = next((item["symbolValue"] for item in symbol_list if item.get("symbolValue")), "")
+    except (KeyError, IndexError):
+        phonetic = ""
+
+    senses = []
+    for collector in raw.get("meansRevisionCollector", []):
+        pos = collector.get("partOfSpeech", "")
+        for mean in collector.get("means", []):
+            if "all" not in mean.get("showLevelTab", []):
+                continue
+            senses.append({
+                "pos":          pos,
+                "level":        mean.get("meanLevel", ""),
+                "value":        _strip_tags(mean.get("value", "")),
+                "exampleOri":   _strip_tags(mean.get("exampleOri", "")),
+                "exampleTrans": _strip_tags(mean.get("exampleTrans", "")),
+            })
+
+    return {"query": query, "phonetic": phonetic, "senses": senses}
 
 
 class TranslateRequest(BaseModel):
@@ -45,13 +111,12 @@ async def translate(req: TranslateRequest):
     if not text:
         return JSONResponse({"error": "텍스트가 비어 있습니다."}, status_code=400)
 
-    prompt = _LONG_PROMPT.replace("{text}", text)
-
     async def stream():
         async with _client.messages.stream(
             model=CLAUDE_MODEL,
             max_tokens=2048,
-            messages=[{"role": "user", "content": prompt}],
+            system=f"{_SYSTEM_PROMPT}\n\n{_RULES}",
+            messages=[{"role": "user", "content": f"{_EXAMPLES}\n\nINPUT:\n{text}"}],
         ) as s:
             async for chunk in s.text_stream:
                 yield chunk
@@ -80,36 +145,12 @@ def naver_dict(query: str = ""):
     )
     data = resp.json()
 
-    word_section = (
-        data.get("searchResultMap", {})
-            .get("searchResultListMap", {})
-            .get("WORD", {})
-            .get("items", [])
-    )
+    raw = _extract_oxford_entry(data)
+    if raw is None:
+        return JSONResponse({"query": query, "senses": [], "phonetic": ""})
 
-    def strip_tags(s: str) -> str:
-        return s.replace("<strong>", "").replace("</strong>", "")
-
-    results = []
-    for item in word_section[:3]:
-        entry = strip_tags(item.get("expEntry", ""))
-        pron_list = item.get("searchPhoneticSymbolList", [])
-        phonetic = pron_list[0].get("symbolValue", "") if pron_list else ""
-
-        senses = []
-        for collector in item.get("meansCollector", []):
-            pos = collector.get("partOfSpeech", "")
-            for mean in collector.get("means", []):
-                senses.append({
-                    "pos":          pos,
-                    "value":        mean.get("value", ""),
-                    "exampleOri":   strip_tags(mean.get("exampleOri", "")),
-                    "exampleTrans": mean.get("exampleTrans", ""),
-                })
-
-        results.append({"entry": entry, "phonetic": phonetic, "senses": senses})
-
-    return JSONResponse({"query": query, "results": results})
+    result = _parse_oxford_entry(raw, data=data, query=query)
+    return JSONResponse(result)
 
 
 if __name__ == "__main__":
