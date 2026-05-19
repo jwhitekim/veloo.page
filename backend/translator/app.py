@@ -78,27 +78,40 @@ def _extract_oxford_entry(data: dict) -> dict | None:
 
 
 def _parse_oxford_entry(raw: dict, data: dict, query: str) -> dict:
+    # 발음기호는 WORD 섹션 items에 있음
+    phonetic = ""
     try:
-        symbol_list = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["searchPhoneticSymbolList"]
-        phonetic = next((item["symbolValue"] for item in symbol_list if item.get("symbolValue")), "")
+        for item in data["searchResultMap"]["searchResultListMap"]["WORD"]["items"]:
+            phonetic = next(
+                (s["symbolValue"] for s in item.get("searchPhoneticSymbolList", []) if s.get("symbolValue")),
+                ""
+            )
+            if phonetic:
+                break
     except (KeyError, IndexError):
-        phonetic = ""
+        pass
 
-    senses = []
+    definitions = []
+    examples = []
     for collector in raw.get("meansRevisionCollector", []):
         pos = collector.get("partOfSpeech", "")
         for mean in collector.get("means", []):
             if "all" not in mean.get("showLevelTab", []):
                 continue
-            senses.append({
-                "pos":          pos,
-                "level":        mean.get("meanLevel", ""),
-                "value":        _strip_tags(mean.get("value", "")),
-                "exampleOri":   _strip_tags(mean.get("exampleOri", "")),
-                "exampleTrans": _strip_tags(mean.get("exampleTrans", "")),
+            definitions.append({
+                "pos":   pos,
+                "level": mean.get("meanLevel", ""),
+                "value": _strip_tags(mean.get("value", "")),
             })
+            ori = _strip_tags(mean.get("exampleOri", ""))
+            if ori:
+                examples.append({
+                    "pos":   pos,
+                    "ori":   ori,
+                    "trans": _strip_tags(mean.get("exampleTrans", "")),
+                })
 
-    return {"query": query, "phonetic": phonetic, "senses": senses}
+    return {"query": query, "phonetic": phonetic, "definitions": definitions, "examples": examples}
 
 
 class TranslateRequest(BaseModel):

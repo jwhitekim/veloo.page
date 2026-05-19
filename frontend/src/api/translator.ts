@@ -1,17 +1,22 @@
 const BASE = '/translate'
 
-export interface DictSense {
+export interface DictDefinition {
   pos: string
   level: string
   value: string
-  exampleOri: string
-  exampleTrans: string
+}
+
+export interface DictExample {
+  pos: string
+  ori: string
+  trans: string
 }
 
 export interface DictResult {
   query: string
   phonetic: string
-  senses: DictSense[]
+  definitions: DictDefinition[]
+  examples: DictExample[]
 }
 
 export async function naverDict(query: string): Promise<DictResult> {
