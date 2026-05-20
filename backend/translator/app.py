@@ -69,35 +69,32 @@ def _strip_tags(s: str) -> str:
     return s.replace("<strong>", "").replace("</strong>", "")
 
 
-def _extract_oxford_entry(data: dict) -> dict | None:
-    try:
-        exp_only = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["expOnly"]
-        return json.loads(exp_only)
-    except (KeyError, IndexError, json.JSONDecodeError):
-        return None
-
-
-def _parse_oxford_entry(raw: dict, data: dict, query: str) -> dict:
-    # 발음기호는 WORD 섹션 items에 있음
-    phonetic = ""
+def _get_phonetic(data: dict) -> str:
     try:
         for item in data["searchResultMap"]["searchResultListMap"]["WORD"]["items"]:
-            phonetic = next(
+            sym = next(
                 (s["symbolValue"] for s in item.get("searchPhoneticSymbolList", []) if s.get("symbolValue")),
-                ""
+                "",
             )
-            if phonetic:
-                break
+            if sym:
+                return sym
     except (KeyError, IndexError):
         pass
+    return ""
 
-    definitions = []
-    examples = []
+
+def _parse_thesaurus(data: dict) -> tuple[list, list]:
+    """THESAURUS expOnly → meansRevisionCollector 파싱 (Oxford 구조)."""
+    try:
+        exp_only = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["expOnly"]
+        raw = json.loads(exp_only)
+    except (KeyError, IndexError, json.JSONDecodeError):
+        return [], []
+
+    definitions, examples = [], []
     for collector in raw.get("meansRevisionCollector", []):
         pos = collector.get("partOfSpeech", "")
         for mean in collector.get("means", []):
-            if "all" not in mean.get("showLevelTab", []):
-                continue
             definitions.append({
                 "pos":   pos,
                 "level": mean.get("meanLevel", ""),
@@ -110,8 +107,31 @@ def _parse_oxford_entry(raw: dict, data: dict, query: str) -> dict:
                     "ori":   ori,
                     "trans": _strip_tags(mean.get("exampleTrans", "")),
                 })
+    return definitions, examples
 
-    return {"query": query, "phonetic": phonetic, "definitions": definitions, "examples": examples}
+
+def _parse_word(data: dict) -> tuple[list, list]:
+    """WORD.meansCollector fallback (Oxford 구조 없는 단어용)."""
+    definitions, examples = [], []
+    try:
+        for item in data["searchResultMap"]["searchResultListMap"]["WORD"]["items"]:
+            for collector in item.get("meansCollector", []):
+                pos = collector.get("partOfSpeech", "")
+                for mean in collector.get("means", []):
+                    val = _strip_tags(mean.get("value", ""))
+                    if not val:
+                        continue
+                    definitions.append({"pos": pos, "level": "general", "value": val})
+                    ori = _strip_tags(mean.get("exampleOri", ""))
+                    if ori:
+                        examples.append({
+                            "pos":   pos,
+                            "ori":   ori,
+                            "trans": _strip_tags(mean.get("exampleTrans", "")),
+                        })
+    except (KeyError, IndexError):
+        pass
+    return definitions, examples
 
 
 class TranslateRequest(BaseModel):
@@ -158,12 +178,11 @@ def naver_dict(query: str = ""):
     )
     data = resp.json()
 
-    raw = _extract_oxford_entry(data)
-    if raw is None:
-        return JSONResponse({"query": query, "phonetic": "", "definitions": [], "examples": []})
-
-    result = _parse_oxford_entry(raw, data=data, query=query)
-    return JSONResponse(result)
+    phonetic = _get_phonetic(data)
+    definitions, examples = _parse_thesaurus(data)
+    if not definitions:
+        definitions, examples = _parse_word(data)
+    return JSONResponse({"query": query, "phonetic": phonetic, "definitions": definitions, "examples": examples})
 
 
 if __name__ == "__main__":

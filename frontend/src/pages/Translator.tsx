@@ -208,7 +208,7 @@ export default function Translator() {
         }
         .dict-close:hover { background: #f1f3f4; }
         .dict-search-input {
-          width: 360px; padding: 7px 14px 7px 34px;
+          max-width: 360px; width: 100%; padding: 7px 14px 7px 34px;
           font-size: 14px; border: 1.5px solid #dadce0;
           border-radius: 4px; outline: none;
           background: #ffffff; color: #202124;
