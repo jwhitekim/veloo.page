@@ -23,8 +23,9 @@ export function useTodos(filter: NavFilter) {
 
   const addTodo = async (data: { name: string; memo?: string; priority?: string; deadline?: string }) => {
     const todo = await api.createTodo(data)
-    setTodos(prev => [todo, ...prev])
-    return todo
+    const normalized = { ...todo, steps: todo.steps ?? [] }
+    setTodos(prev => [normalized, ...prev])
+    return normalized
   }
 
   const editTodo = async (id: number, data: Partial<Todo>) => {

@@ -108,7 +108,8 @@ export default function FocusPanel({
     }
   }
 
-  const completedSteps = todo.steps.filter(s => s.done).length
+  const steps = todo.steps ?? []
+  const completedSteps = steps.filter(s => s.done).length
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--panel)' }}>
@@ -161,8 +162,8 @@ export default function FocusPanel({
                   {priorityLabel[todo.priority]}
                 </span>
                 {todo.deadline && <span className="text-[11px] text-gray-400 dark:text-gray-500">{todo.deadline}</span>}
-                {todo.steps.length > 0 && (
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500">단계 {completedSteps}/{todo.steps.length} 완료</span>
+                {steps.length > 0 && (
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">단계 {completedSteps}/{steps.length} 완료</span>
                 )}
               </div>
               <h2 className="text-[15px] font-semibold leading-snug text-gray-900 dark:text-gray-100">{todo.name}</h2>
@@ -219,7 +220,7 @@ export default function FocusPanel({
             <StepSkeleton />
           ) : (
             <div className="space-y-1">
-              {todo.steps.map(step => (
+              {steps.map(step => (
                 <StepRow
                   key={step.id}
                   step={step}
@@ -246,7 +247,7 @@ export default function FocusPanel({
             </div>
           )}
 
-          {todo.steps.length === 0 && !generatingSteps && (
+          {steps.length === 0 && !generatingSteps && (
             <button
               onClick={handleGenerateSteps}
               className="mt-2 w-full py-2 text-[12px] text-[#1d9e75] border border-dashed border-[#1d9e75]/30 rounded-lg hover:bg-[#e1f5ee] dark:hover:bg-[#0a2318] transition-colors"
