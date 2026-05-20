@@ -160,7 +160,7 @@ def naver_dict(query: str = ""):
 
     raw = _extract_oxford_entry(data)
     if raw is None:
-        return JSONResponse({"query": query, "senses": [], "phonetic": ""})
+        return JSONResponse({"query": query, "phonetic": "", "definitions": [], "examples": []})
 
     result = _parse_oxford_entry(raw, data=data, query=query)
     return JSONResponse(result)

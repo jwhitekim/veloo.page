@@ -14,9 +14,9 @@ export interface DictExample {
 
 export interface DictResult {
   query: string
-  phonetic: string
-  definitions: DictDefinition[]
-  examples: DictExample[]
+  phonetic?: string
+  definitions?: DictDefinition[]
+  examples?: DictExample[]
 }
 
 export async function naverDict(query: string): Promise<DictResult> {

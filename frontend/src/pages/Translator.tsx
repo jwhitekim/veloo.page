@@ -414,9 +414,9 @@ export default function Translator() {
               {!dictLoading && !dictResult && <p style={{ color: '#9aa0a6', fontSize: 14 }}>검색 결과 없음</p>}
 
               {!dictLoading && dictResult && dictTab === 'definitions' && (
-                dictResult.definitions.length === 0
+                (dictResult.definitions ?? []).length === 0
                   ? <p style={{ color: '#9aa0a6', fontSize: 14 }}>정의 없음</p>
-                  : dictResult.definitions.map((d, i) => (
+                  : (dictResult.definitions ?? []).map((d, i) => (
                     <div key={i} className="gt-dict-entry" style={{
                       padding: '8px 0', borderBottom: '1px solid #f1f3f4',
                       display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
@@ -431,9 +431,9 @@ export default function Translator() {
               )}
 
               {!dictLoading && dictResult && dictTab === 'examples' && (
-                dictResult.examples.length === 0
+                (dictResult.examples ?? []).length === 0
                   ? <p style={{ color: '#9aa0a6', fontSize: 14 }}>예문 없음</p>
-                  : dictResult.examples.map((ex, i) => (
+                  : (dictResult.examples ?? []).map((ex, i) => (
                     <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid #dadce0' }}>
                       <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: '#e8f0fe', color: '#1a73e8', display: 'inline-block', marginBottom: 6 }}>{ex.pos}</span>
                       <div style={{ fontSize: 14, color: '#202124', marginBottom: 4 }}>{ex.ori}</div>
