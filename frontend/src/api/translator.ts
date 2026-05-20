@@ -4,6 +4,8 @@ export interface DictDefinition {
   pos: string
   level: string
   value: string
+  exampleOri?: string
+  exampleTrans?: string
 }
 
 export interface DictExample {
@@ -15,8 +17,10 @@ export interface DictExample {
 export interface DictResult {
   query: string
   phonetic?: string
+  audioUrl?: string
   definitions?: DictDefinition[]
   examples?: DictExample[]
+  synonyms?: string[]
 }
 
 export async function naverDict(query: string): Promise<DictResult> {

@@ -17,6 +17,11 @@ const LEVEL_STYLE: Record<string, { background: string; color: string }> = {
   general:      { background: '#f1f3f4', color: '#5f6368' },
 }
 
+const POS_KO: Record<string, string> = {
+  VERB: '동사', NOUN: '명사', ADJ: '형용사', ADV: '부사',
+  PREP: '전치사', CONJ: '접속사', PRON: '대명사', INTERJ: '감탄사',
+}
+
 export default function Translator() {
   const [source, setSource] = useState('')
   const [streamedText, setStreamedText] = useState('')
@@ -31,7 +36,6 @@ export default function Translator() {
   const [dictQuery, setDictQuery] = useState('')
   const [dictResult, setDictResult] = useState<api.DictResult | null>(null)
   const [dictLoading, setDictLoading] = useState(false)
-  const [dictTab, setDictTab] = useState<'definitions' | 'examples'>('definitions')
 
   const [ctxVisible, setCtxVisible] = useState(false)
   const [ctxPos, setCtxPos] = useState({ x: 0, y: 0 })
@@ -84,7 +88,6 @@ export default function Translator() {
     if (!word.trim()) return
     setDictQuery(word)
     setDictOpen(true)
-    setDictTab('definitions')
     setDictLoading(true)
     try {
       const data = await api.naverDict(word)
@@ -194,13 +197,27 @@ export default function Translator() {
         }
         .gt-lang-btn:hover:not(.active) { background: #f1f3f4; border-radius: 4px; }
         .gt-lang-btn.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; }
-        .dict-tab {
-          padding: 8px 16px; font-size: 14px; font-weight: 500;
-          border: none; border-bottom: 2px solid transparent;
-          background: transparent; color: #5f6368;
-          cursor: pointer; font-family: inherit;
+        .dict-pos-header {
+          font-size: 14px; font-weight: 600; color: #202124;
+          margin: 16px 0 8px; padding-bottom: 4px;
+          border-bottom: 1px solid #f1f3f4;
         }
-        .dict-tab.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; }
+        .dict-def-row { display: flex; gap: 12px; padding: 8px 0; }
+        .dict-def-number { min-width: 20px; font-size: 14px; color: #5f6368; flex-shrink: 0; padding-top: 1px; }
+        .dict-def-body { flex: 1; min-width: 0; }
+        .dict-def-text { font-size: 14px; color: #202124; line-height: 1.5; }
+        .dict-def-example { margin-top: 4px; }
+        .dict-def-example q { font-size: 13px; color: #5f6368; font-style: normal; quotes: none; }
+        .dict-synonyms { margin-top: 6px; font-size: 13px; }
+        .dict-synonyms-label { color: #5f6368; }
+        .dict-synonym { color: #1a73e8; cursor: pointer; }
+        .dict-synonym:hover { text-decoration: underline; }
+        .dict-example-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f3f4; }
+        .dict-example-icon { color: #dadce0; font-size: 18px; flex-shrink: 0; line-height: 1.4; }
+        .dict-example-body { flex: 1; min-width: 0; }
+        .dict-example-ori { font-size: 14px; color: #202124; line-height: 1.5; }
+        .dict-example-ori b { font-weight: 600; }
+        .dict-example-trans { font-size: 13px; color: #5f6368; margin-top: 3px; }
         .dict-close {
           background: transparent; border: none; font-size: 18px;
           color: #5f6368; cursor: pointer; padding: 4px 8px;
@@ -250,6 +267,7 @@ export default function Translator() {
             padding: '0 16px', height: 52,
             borderBottom: '1px solid #dadce0',
             flexShrink: 0, background: '#ffffff',
+            marginRight: dictOpen ? 360 : 0,
           }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
               <button className="gt-lang-btn">언어 감지</button>
@@ -273,7 +291,7 @@ export default function Translator() {
           </div>
 
           {/* 패널 영역 */}
-          <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0, marginRight: dictOpen ? 360 : 0 }}>
 
           {/* 소스 패널 */}
           <div style={{
@@ -382,65 +400,112 @@ export default function Translator() {
             </div>
           </div>
 
-          {/* ── 우측 사전 컬럼 ── */}
+          {/* ── 우측 사전 컬럼 (position: fixed) ── */}
           {dictOpen && (
           <div style={{
-            width: 360, flexShrink: 0,
+            position: 'fixed', right: 0, top: 56,
+            width: 360, height: 'calc(100vh - 56px)',
             borderLeft: '1px solid #dadce0',
             background: '#ffffff',
             display: 'flex', flexDirection: 'column',
+            zIndex: 100,
             overflow: 'hidden',
           }}>
             {/* 사전 헤더 */}
-            <div style={{ padding: '18px 18px 0', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 }}>
+            <div style={{ padding: '18px 18px 14px', flexShrink: 0, borderBottom: '1px solid #dadce0' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 22, color: '#202124', lineHeight: 1.3 }}>{dictQuery}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 22, color: '#202124', lineHeight: 1.3 }}>{dictQuery}</span>
+                    {dictResult?.audioUrl && (
+                      <button className="gt-icon-btn" style={{ padding: 4 }}
+                        onClick={() => new Audio(dictResult!.audioUrl!).play()} title="발음 듣기">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                   {dictResult?.phonetic && (
                     <div style={{ fontSize: 13, color: '#5f6368', marginTop: 2 }}>{stripHtml(dictResult.phonetic)}</div>
                   )}
                 </div>
                 <button className="dict-close" onClick={() => setDictOpen(false)}>×</button>
               </div>
-              <div style={{ display: 'flex', borderBottom: '1px solid #dadce0', marginTop: 12 }}>
-                <button className={`dict-tab${dictTab === 'definitions' ? ' active' : ''}`} onClick={() => setDictTab('definitions')}>정의</button>
-                <button className={`dict-tab${dictTab === 'examples' ? ' active' : ''}`} onClick={() => setDictTab('examples')}>예문</button>
-              </div>
             </div>
 
-            {/* 탭 컨텐츠 */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px' }}>
-              {dictLoading && <p style={{ color: '#9aa0a6', fontSize: 14 }}>검색 중...</p>}
-              {!dictLoading && !dictResult && <p style={{ color: '#9aa0a6', fontSize: 14 }}>검색 결과 없음</p>}
+            {/* 컨텐츠 — 단일 스크롤 */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px 18px' }}>
+              {dictLoading && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>검색 중...</p>}
+              {!dictLoading && !dictResult && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>검색 결과 없음</p>}
 
-              {!dictLoading && dictResult && dictTab === 'definitions' && (
-                (dictResult.definitions ?? []).length === 0
-                  ? <p style={{ color: '#9aa0a6', fontSize: 14 }}>정의 없음</p>
-                  : (dictResult.definitions ?? []).map((d, i) => (
-                    <div key={i} className="gt-dict-entry" style={{
-                      padding: '8px 0', borderBottom: '1px solid #f1f3f4',
-                      display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap',
-                    }}>
-                      <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: '#e8f0fe', color: '#1a73e8' }}>{d.pos}</span>
-                      {d.level && (
-                        <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, ...(LEVEL_STYLE[d.level] ?? LEVEL_STYLE.general) }}>{d.level}</span>
-                      )}
-                      <span style={{ fontSize: 14, color: '#202124' }}>{d.value}</span>
-                    </div>
-                  ))
-              )}
+              {!dictLoading && dictResult && (() => {
+                const defs = dictResult.definitions ?? []
+                const exs  = dictResult.examples  ?? []
+                const syns = dictResult.synonyms  ?? []
 
-              {!dictLoading && dictResult && dictTab === 'examples' && (
-                (dictResult.examples ?? []).length === 0
-                  ? <p style={{ color: '#9aa0a6', fontSize: 14 }}>예문 없음</p>
-                  : (dictResult.examples ?? []).map((ex, i) => (
-                    <div key={i} style={{ padding: '10px 0', borderBottom: '1px solid #dadce0' }}>
-                      <span style={{ fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, background: '#e8f0fe', color: '#1a73e8', display: 'inline-block', marginBottom: 6 }}>{ex.pos}</span>
-                      <div style={{ fontSize: 14, color: '#202124', marginBottom: 4 }}>{ex.ori}</div>
-                      <div style={{ fontSize: 13, color: '#5f6368' }}>{ex.trans}</div>
-                    </div>
-                  ))
-              )}
+                const order: string[] = []
+                const grouped: Record<string, typeof defs> = {}
+                for (const d of defs) {
+                  const key = d.pos || '기타'
+                  if (!grouped[key]) { grouped[key] = []; order.push(key) }
+                  grouped[key].push(d)
+                }
+
+                return (
+                  <>
+                    {/* 정의 섹션 */}
+                    {defs.length === 0 && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>정의 없음</p>}
+                    {order.map((pos, pi) => (
+                      <div key={pos}>
+                        <div className="dict-pos-header">{POS_KO[pos] ?? pos}</div>
+                        {grouped[pos].map((d, i) => (
+                          <div key={i} className="dict-def-row">
+                            <div className="dict-def-number">{i + 1}</div>
+                            <div className="dict-def-body">
+                              <div className="dict-def-text">{d.value}</div>
+                              {d.exampleOri && (
+                                <div className="dict-def-example"><q>{d.exampleOri}</q></div>
+                              )}
+                              {/* 동의어는 첫 번째 pos의 첫 번째 정의 아래에 한 번만 표시 */}
+                              {pi === 0 && i === 0 && syns.length > 0 && (
+                                <div className="dict-synonyms">
+                                  <span className="dict-synonyms-label">동의어: </span>
+                                  {syns.map((s, si) => (
+                                    <span key={si}>
+                                      <span className="dict-synonym" role="button" onClick={() => openDict(s)}>{s}</span>
+                                      {si < syns.length - 1 && <span style={{ color: '#5f6368' }}>, </span>}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {d.level && (
+                              <span style={{ alignSelf: 'flex-start', flexShrink: 0, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, ...(LEVEL_STYLE[d.level] ?? LEVEL_STYLE.general) }}>{d.level}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+
+                    {/* 예문 섹션 */}
+                    {exs.length > 0 && (
+                      <div>
+                        <div className="dict-pos-header">예문</div>
+                        {exs.map((ex, i) => (
+                          <div key={i} className="dict-example-row">
+                            <div className="dict-example-icon">❝</div>
+                            <div className="dict-example-body">
+                              <div className="dict-example-ori">{ex.ori}</div>
+                              {ex.trans && <div className="dict-example-trans">{ex.trans}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           </div>
           )}

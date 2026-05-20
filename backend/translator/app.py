@@ -1,6 +1,7 @@
 """Translation Studio — FastAPI + Claude API"""
 import json
 import os
+import re
 import time
 
 import anthropic
@@ -66,48 +67,68 @@ _NAVER_HEADERS = {
 
 
 def _strip_tags(s: str) -> str:
-    return s.replace("<strong>", "").replace("</strong>", "")
+    return re.sub(r"<[^>]+>", "", s)
 
 
-def _get_phonetic(data: dict) -> str:
+def _get_phonetic(data: dict) -> tuple[str, str | None]:
+    phonetic = ""
+    audio_url = None
     try:
         for item in data["searchResultMap"]["searchResultListMap"]["WORD"]["items"]:
-            sym = next(
-                (s["symbolValue"] for s in item.get("searchPhoneticSymbolList", []) if s.get("symbolValue")),
-                "",
-            )
-            if sym:
-                return sym
+            for sym in item.get("searchPhoneticSymbolList", []):
+                if not phonetic and sym.get("symbolValue"):
+                    phonetic = sym["symbolValue"]
+                if audio_url is None and sym.get("symbolFile"):
+                    audio_url = sym["symbolFile"]
+                if phonetic and audio_url:
+                    return phonetic, audio_url
     except (KeyError, IndexError):
         pass
-    return ""
+    return phonetic, audio_url
 
 
-def _parse_thesaurus(data: dict) -> tuple[list, list]:
+def _parse_thesaurus(data: dict) -> tuple[list, list, list]:
     """THESAURUS expOnly → meansRevisionCollector 파싱 (Oxford 구조)."""
     try:
         exp_only = data["searchResultMap"]["searchResultListMap"]["THESAURUS"]["items"][0]["expOnly"]
         raw = json.loads(exp_only)
     except (KeyError, IndexError, json.JSONDecodeError):
-        return [], []
+        return [], [], []
 
     definitions, examples = [], []
-    for collector in raw.get("meansRevisionCollector", []):
+    collectors = raw.get("meansRevisionCollector") or raw.get("multiExamples") or []
+    for collector in collectors:
         pos = collector.get("partOfSpeech", "")
         for mean in collector.get("means", []):
-            definitions.append({
-                "pos":   pos,
-                "level": mean.get("meanLevel", ""),
-                "value": _strip_tags(mean.get("value", "")),
-            })
             ori = _strip_tags(mean.get("exampleOri", ""))
+            definitions.append({
+                "pos":          pos,
+                "level":        mean.get("meanLevel") or mean.get("examLevel") or "",
+                "value":        _strip_tags(mean.get("value", "")),
+                "exampleOri":   ori,
+                "exampleTrans": _strip_tags(mean.get("exampleTrans", "")) if ori else "",
+            })
             if ori:
                 examples.append({
                     "pos":   pos,
                     "ori":   ori,
                     "trans": _strip_tags(mean.get("exampleTrans", "")),
                 })
-    return definitions, examples
+
+    synonyms: list[str] = []
+    try:
+        th = json.loads(raw.get("expThesaurus") or "null")
+        if th:
+            for posp in th.get("pospList", []):
+                for word in posp.get("wordList", []):
+                    if word.get("recommendYn") == 1:
+                        name = word.get("wordName", "")
+                        if name:
+                            synonyms.append(name)
+    except (json.JSONDecodeError, AttributeError):
+        pass
+
+    return definitions, examples, synonyms
 
 
 def _parse_word(data: dict) -> tuple[list, list]:
@@ -121,8 +142,14 @@ def _parse_word(data: dict) -> tuple[list, list]:
                     val = _strip_tags(mean.get("value", ""))
                     if not val:
                         continue
-                    definitions.append({"pos": pos, "level": "general", "value": val})
                     ori = _strip_tags(mean.get("exampleOri", ""))
+                    definitions.append({
+                        "pos":          pos,
+                        "level":        "general",
+                        "value":        val,
+                        "exampleOri":   ori,
+                        "exampleTrans": _strip_tags(mean.get("exampleTrans", "")) if ori else "",
+                    })
                     if ori:
                         examples.append({
                             "pos":   pos,
@@ -178,11 +205,18 @@ def naver_dict(query: str = ""):
     )
     data = resp.json()
 
-    phonetic = _get_phonetic(data)
-    definitions, examples = _parse_thesaurus(data)
+    phonetic, audio_url = _get_phonetic(data)
+    definitions, examples, synonyms = _parse_thesaurus(data)
     if not definitions:
         definitions, examples = _parse_word(data)
-    return JSONResponse({"query": query, "phonetic": phonetic, "definitions": definitions, "examples": examples})
+    return JSONResponse({
+        "query":       query,
+        "phonetic":    phonetic,
+        "audioUrl":    audio_url,
+        "definitions": definitions,
+        "examples":    examples,
+        "synonyms":    synonyms,
+    })
 
 
 if __name__ == "__main__":

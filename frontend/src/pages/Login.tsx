@@ -100,7 +100,7 @@ export default function Login() {
               transition: 'background 0.15s',
             }}
           >
-            {loading ? '확인 중...' : '입장'}
+            {loading ? '확인 중...' : '로그인'}
           </button>
         </form>
       </div>
