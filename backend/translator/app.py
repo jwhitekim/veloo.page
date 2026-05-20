@@ -147,7 +147,7 @@ async def translate(req: TranslateRequest):
     async def stream():
         async with _client.messages.stream(
             model=CLAUDE_MODEL,
-            max_tokens=2048,
+            max_tokens=4096,
             system=f"{_SYSTEM_PROMPT}\n\n{_RULES}",
             messages=[{"role": "user", "content": f"{_EXAMPLES}\n\nINPUT:\n{text}"}],
         ) as s:
