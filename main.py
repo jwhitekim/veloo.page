@@ -32,7 +32,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not ACCESS_PASSWORD:
             return await call_next(request)
         path = request.url.path
-        if path == "/login" or path.startswith("/assets/"):
+        if path == "/login" or path == "/favicon.svg" or path.startswith("/assets/"):
             return await call_next(request)
         if request.cookies.get("access_token") in _sessions:
             return await call_next(request)
@@ -80,6 +80,11 @@ app.mount("/translate", translate_app)
 app.mount("/arch-trainer", arch_app)
 app.mount("/todo", todo_app)
 app.mount("/assets", StaticFiles(directory=os.path.join(DIST, "assets")), name="assets")
+
+
+@app.get("/favicon.svg")
+async def favicon():
+    return FileResponse(os.path.join(DIST, "favicon.svg"), media_type="image/svg+xml")
 
 
 @app.get("/{full_path:path}")
