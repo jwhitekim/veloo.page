@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd veloo
+            cd ~/Joonspace/veloo
             git pull origin main
             docker build -t veloo .
             docker stop veloo || true
