@@ -33,7 +33,7 @@ export default function AppHeader({ title, right }: Props) {
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
       >
-        Lab Toolkit
+        veloo
       </button>
       {title && (
         <>

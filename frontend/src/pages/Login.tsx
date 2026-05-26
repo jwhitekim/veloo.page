@@ -50,7 +50,7 @@ export default function Login() {
       }}>
         <div style={{ marginBottom: 28, textAlign: 'center' }}>
           <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--text-disabled)' }}>
-            Lab Toolkit
+            veloo
           </div>
         </div>
 

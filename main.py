@@ -1,4 +1,4 @@
-"""Lab Toolkit — 연구실 도구 모음 허브"""
+"""veloo — 연구실 도구 모음 허브"""
 import logging
 import os
 import secrets

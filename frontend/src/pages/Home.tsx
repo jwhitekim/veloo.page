@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="home-root">
       <header className="home-header">
-        <span className="home-wordmark">Lab Toolkit</span>
+        <span className="home-wordmark">veloo</span>
       </header>
       <main className="home-main">
         <nav className="home-grid">
