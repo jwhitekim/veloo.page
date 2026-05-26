@@ -1,4 +1,4 @@
-# Lab Toolkit
+# veloo
 
 A unified research assistant portal for academic lab workflows.
 All tools share a single FastAPI backend and a React/TypeScript frontend served as an SPA.
@@ -22,7 +22,7 @@ All tools share a single FastAPI backend and a React/TypeScript frontend served 
 - **Frontend** — React 18 + TypeScript + Vite, dark/light theme via CSS custom properties
 - **AI** — Anthropic Claude API (`claude-haiku-4-5` for fast tasks, `claude-sonnet-4-6` for vision/reasoning)
 - **Data** — Supabase (Todo), Semantic Scholar API (paper metadata), Naver Dictionary API (translation)
-- **Deploy** — Docker + Fly.io via GitHub Actions (`superfly/flyctl-actions`)
+- **Deploy** — Docker + SSH via GitHub Actions (`appleboy/ssh-action`)
 
 ---
 
@@ -48,12 +48,12 @@ npm run dev            # Vite dev server on :5173, proxies API calls to :9000
 ## Deployment
 
 Deployment is handled automatically by `.github/workflows/deploy.yml` on every push to `main`.
-The workflow builds the frontend (`npm ci && npm run build`), then runs `flyctl deploy --remote-only` which builds the Docker image on Fly.io's remote builder and deploys it.
+The workflow SSHes into the server, pulls the latest code, and rebuilds the Docker image.
 
 **Required secrets** (GitHub → Settings → Secrets):
 
 | Secret | Description |
 |--------|-------------|
-| `FLY_API_TOKEN` | Generated with `flyctl auth token` |
-
-**Required files** (not yet committed): `Dockerfile`, `fly.toml` — run `fly launch` to generate `fly.toml` and write a `Dockerfile` that copies `frontend/dist/` into the image alongside the Python backend.
+| `SERVER_HOST` | Server IP or hostname |
+| `SERVER_USER` | SSH username |
+| `SERVER_PASSWORD` | SSH password |
