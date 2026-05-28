@@ -28,107 +28,231 @@
   letter-spacing: -0.01em;
 }
 
-.home-date {
+.home-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.home-nav-link {
   font-size: 13px;
   color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.home-nav-link:hover {
+  color: var(--text-primary);
 }
 
 /* ── Main ────────────────────────────────────────────────────────────────── */
 .home-main {
   flex: 1;
-  padding: 48px var(--space-xl);
+  padding: 32px 40px;
 }
 
-/* ── List ────────────────────────────────────────────────────────────────── */
-.home-list {
-  max-width: 860px;
-  margin: 0 auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+.home-grid {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
 }
 
-/* ── Card ────────────────────────────────────────────────────────────────── */
-.home-card {
+/* ── Left Section ────────────────────────────────────────────────────────── */
+.home-section {
+  flex: 2;
+  min-width: 0;
+}
+
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  min-height: 72px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.section-more {
+  font-size: 13px;
+  color: var(--text-secondary);
   text-decoration: none;
-  background: var(--bg-base);
+  transition: color 0.15s;
+}
+
+.section-more:hover {
+  color: var(--text-primary);
+}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.skeleton-row {
+  height: 20px;
+  background: var(--bg-additive);
+  border-radius: 4px;
+  animation: home-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes home-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Empty ───────────────────────────────────────────────────────────────── */
+.home-empty {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 32px 0;
+}
+
+/* ── Todo Items ──────────────────────────────────────────────────────────── */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background 0.15s ease;
-  opacity: 0;
-  animation: cardFadeIn 0.35s ease forwards;
+  border-radius: 6px;
+  transition: background 0.12s;
 }
 
-.home-card:last-child {
-  border-bottom: none;
-}
-
-.home-card:hover {
+.todo-item:hover {
   background: var(--bg-additive);
 }
 
-/* ── Card Left ───────────────────────────────────────────────────────────── */
-.card-left {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+.todo-item.last {
+  border-bottom: none;
 }
 
-.card-name {
-  font-size: 16px;
-  font-weight: var(--fw-semibold);
+.todo-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.todo-check.checked {
+  background: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+.todo-name {
+  flex: 1;
+  font-size: 14px;
   color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.card-desc {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0;
+.todo-name.done {
+  text-decoration: line-through;
+  color: var(--text-disabled);
 }
 
-/* ── Card Right ──────────────────────────────────────────────────────────── */
-.card-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.todo-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 
-.card-activity {
+.todo-extra {
   font-size: 13px;
+  color: var(--text-secondary);
+  padding: 10px 8px 0;
+}
+
+.todo-add-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.todo-add-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+/* ── Right Aside ─────────────────────────────────────────────────────────── */
+.home-aside {
+  flex: 1;
+  max-width: 320px;
+  min-width: 0;
+}
+
+.activity-section + .activity-section {
+  margin-top: 24px;
+}
+
+.activity-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.activity-item {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-item:hover {
   color: var(--text-secondary);
 }
 
-.card-open {
+.activity-empty {
   font-size: 13px;
-  color: var(--text-primary);
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.home-card:hover .card-open {
-  opacity: 1;
+  color: var(--text-disabled);
+  padding: 8px 0;
 }
 
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .home-main { padding: 24px var(--space-xl); }
-  .card-activity { display: none; }
-  .card-open { opacity: 1; }
-}
-
-/* ── Animation ───────────────────────────────────────────────────────────── */
-@keyframes cardFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  .home-main { padding: 24px 16px; }
+  .home-grid { flex-direction: column; }
+  .home-aside { max-width: none; width: 100%; }
+  .home-nav { gap: 12px; }
+  .home-nav-link { font-size: 12px; }
 }
