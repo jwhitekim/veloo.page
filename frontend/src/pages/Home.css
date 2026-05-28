@@ -11,6 +11,7 @@
   height: var(--header-h);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 var(--space-xl);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -27,71 +28,97 @@
   letter-spacing: -0.01em;
 }
 
+.home-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 /* ── Main ────────────────────────────────────────────────────────────────── */
 .home-main {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px var(--space-xl);
+  padding: 48px var(--space-xl);
 }
 
-/* ── Grid ────────────────────────────────────────────────────────────────── */
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  column-gap: var(--space-lg);
-  row-gap: var(--space-2xl);
-  width: 80vw;
-  max-width: 1280px;
-}
-
-@media (max-width: 1024px) {
-  .home-grid { grid-template-columns: repeat(2, 1fr); }
+/* ── List ────────────────────────────────────────────────────────────────── */
+.home-list {
+  max-width: 860px;
+  margin: 0 auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
 .home-card {
-  background: var(--bg-base);
-  border-radius: var(--radius-lg);
-  min-height: 240px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  padding: var(--space-xl);
+  justify-content: space-between;
+  padding: 20px 24px;
+  min-height: 72px;
   text-decoration: none;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-subtle);
   transition: background 0.15s ease;
   opacity: 0;
   animation: cardFadeIn 0.35s ease forwards;
+}
+
+.home-card:last-child {
+  border-bottom: none;
 }
 
 .home-card:hover {
   background: var(--bg-additive);
 }
 
-/* ── Icon ────────────────────────────────────────────────────────────────── */
-.card-icon {
-  color: var(--text-primary);
+/* ── Card Left ───────────────────────────────────────────────────────────── */
+.card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-/* ── Name ────────────────────────────────────────────────────────────────── */
 .card-name {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: var(--fw-semibold);
   color: var(--text-primary);
-  text-align: center;
 }
 
-/* ── Description ─────────────────────────────────────────────────────────── */
 .card-desc {
-  font-size: var(--fs-body);
-  font-weight: var(--fw-regular);
+  font-size: 13px;
   color: var(--text-secondary);
-  text-align: center;
   margin: 0;
-  line-height: 1.4;
+}
+
+/* ── Card Right ──────────────────────────────────────────────────────────── */
+.card-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.card-activity {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.card-open {
+  font-size: 13px;
+  color: var(--text-primary);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.home-card:hover .card-open {
+  opacity: 1;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .home-main { padding: 24px var(--space-xl); }
+  .card-activity { display: none; }
+  .card-open { opacity: 1; }
 }
 
 /* ── Animation ───────────────────────────────────────────────────────────── */

@@ -3,11 +3,41 @@ import { useNavigate } from 'react-router-dom'
 import type { NavFilter, Priority, Todo } from '../types'
 import { useTodos } from '../hooks/useTodos'
 import { useAi } from '../hooks/useAi'
+import { useIsMobile } from '../hooks/useIsMobile'
 import AppHeader from '../components/AppHeader'
 import Sidebar from '../components/Sidebar'
 import TodoList from '../components/TodoList'
 import FocusPanel from '../components/FocusPanel'
 import * as api from '../api/client'
+
+const navItems: { label: string; key: NavFilter }[] = [
+  { label: '오늘', key: 'today' },
+  { label: '이번주', key: 'week' },
+  { label: '전체', key: 'all' },
+  { label: '메모', key: 'memo' },
+]
+
+function MobileTabBar({ filter, onFilter }: { filter: NavFilter; onFilter: (f: NavFilter) => void }) {
+  return (
+    <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+      {navItems.map(item => (
+        <button
+          key={item.key}
+          onClick={() => onFilter(item.key)}
+          style={{
+            flex: 1, padding: '12px 0', fontSize: 14, fontWeight: 500,
+            borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+            borderBottom: filter === item.key ? '2px solid var(--text-primary)' : '2px solid transparent',
+            color: filter === item.key ? 'var(--text-primary)' : 'var(--text-secondary)',
+            background: 'transparent', cursor: 'pointer', fontFamily: 'var(--font-sans)',
+          }}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const LIST_MIN = 120
 const LIST_MAX = 600
@@ -15,6 +45,7 @@ const LIST_DEFAULT = 220
 
 export default function TodoPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const [filter, setFilter] = useState<NavFilter>('all')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [listWidth, setListWidth] = useState(LIST_DEFAULT)
@@ -119,50 +150,86 @@ export default function TodoPage() {
     await toggleDone(id)
   }, [toggleDone])
 
+  const focusPanelProps = {
+    todos,
+    onUpdate: handleUpdate,
+    onDelete: handleDelete,
+    onToggleStep: handleToggleStep,
+    onAddStep: handleAddStep,
+    onDeleteStep: handleDeleteStep,
+    onGenerateSteps: handleGenerateSteps,
+    onGenerateStrategy: handleGenerateStrategy,
+    generatingSteps,
+    generatingStrategy,
+  }
+
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
+        <AppHeader title="할일" />
+        <MobileTabBar filter={filter} onFilter={setFilter} />
+        {selectedId !== null ? (
+          loading && !selectedTodo ? (
+            <div className="flex-1 flex items-center justify-center">
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>불러오는 중...</span>
+            </div>
+          ) : (
+            <FocusPanel
+              todo={selectedTodo}
+              {...focusPanelProps}
+              onBack={() => setSelectedId(null)}
+            />
+          )
+        ) : (
+          <TodoList
+            todos={todos}
+            filter={filter}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onToggle={handleToggleDone}
+            onEdit={(id, name) => handleUpdate(id, { name })}
+            onAdd={handleAdd}
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
       <AppHeader title="할일" />
       <div className="flex flex-1 overflow-hidden">
-      <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
+        <Sidebar filter={filter} onFilter={setFilter} todos={todos} />
 
-      <TodoList
-        todos={todos}
-        filter={filter}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        onToggle={handleToggleDone}
-        onEdit={(id, name) => handleUpdate(id, { name })}
-        onAdd={handleAdd}
-        width={listWidth}
-      />
-
-      <div
-        onMouseDown={handleResizerMouseDown}
-        className="w-1 flex-shrink-0 cursor-col-resize transition-colors"
-        style={{ background: 'var(--border-subtle)' }}
-        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive-hover)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
-      />
-
-      {loading && !selectedTodo ? (
-        <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
-          <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>불러오는 중...</span>
-        </div>
-      ) : (
-        <FocusPanel
-          todo={selectedTodo}
+        <TodoList
           todos={todos}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onToggleStep={handleToggleStep}
-          onAddStep={handleAddStep}
-          onDeleteStep={handleDeleteStep}
-          onGenerateSteps={handleGenerateSteps}
-          onGenerateStrategy={handleGenerateStrategy}
-          generatingSteps={generatingSteps}
-          generatingStrategy={generatingStrategy}
+          filter={filter}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onToggle={handleToggleDone}
+          onEdit={(id, name) => handleUpdate(id, { name })}
+          onAdd={handleAdd}
+          width={listWidth}
         />
-      )}
+
+        <div
+          onMouseDown={handleResizerMouseDown}
+          className="w-1 flex-shrink-0 cursor-col-resize transition-colors"
+          style={{ background: 'var(--border-subtle)' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-additive-hover)' }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--border-subtle)' }}
+        />
+
+        {loading && !selectedTodo ? (
+          <div className="flex-1 flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>불러오는 중...</span>
+          </div>
+        ) : (
+          <FocusPanel
+            todo={selectedTodo}
+            {...focusPanelProps}
+          />
+        )}
       </div>
     </div>
   )

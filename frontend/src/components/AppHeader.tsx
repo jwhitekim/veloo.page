@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 interface Props {
   title?: string
@@ -7,6 +8,7 @@ interface Props {
 
 export default function AppHeader({ title, right }: Props) {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   return (
     <header style={{
       height: 'var(--header-h)',
@@ -25,7 +27,7 @@ export default function AppHeader({ title, right }: Props) {
         onClick={() => navigate('/')}
         style={{
           background: 'transparent', border: 'none', cursor: 'pointer',
-          fontSize: 18, fontWeight: 700, color: 'var(--text-primary)',
+          fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-primary)',
           letterSpacing: '-0.01em', padding: '6px 10px',
           borderRadius: 'var(--radius-sm)', fontFamily: 'var(--font-sans)',
           transition: 'background 0.15s', flexShrink: 0,
@@ -38,7 +40,7 @@ export default function AppHeader({ title, right }: Props) {
       {title && (
         <>
           <span style={{ color: 'var(--text-disabled)', fontSize: 16, userSelect: 'none', margin: '0 -4px' }}>›</span>
-          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
+          <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: 'var(--text-primary)' }}>{title}</span>
         </>
       )}
       <div style={{ flex: 1 }} />

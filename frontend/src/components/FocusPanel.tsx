@@ -14,6 +14,7 @@ interface Props {
   onGenerateStrategy: (todo: Todo) => Promise<Todo>
   generatingSteps: boolean
   generatingStrategy: boolean
+  onBack?: () => void
 }
 
 const priorityStyle: Record<string, string> = {
@@ -65,6 +66,7 @@ export default function FocusPanel({
   onGenerateStrategy,
   generatingSteps,
   generatingStrategy,
+  onBack,
 }: Props) {
   const [editMode, setEditMode] = useState(false)
   const [editName, setEditName] = useState('')
@@ -113,6 +115,16 @@ export default function FocusPanel({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden" style={{ background: 'var(--panel)' }}>
+      {onBack && (
+        <div className="px-4 py-2 flex-shrink-0 border-b" style={{ borderColor: 'var(--border)' }}>
+          <button
+            onClick={onBack}
+            style={{ fontSize: 13, color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            ← 목록으로
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="px-6 pt-5 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
         {editMode ? (

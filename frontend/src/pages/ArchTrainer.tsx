@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { RotateCcw } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/archTrainer'
 import type { ExplanationJSON, FeedbackJSON } from '../api/archTrainer'
 
@@ -36,6 +37,7 @@ const FEEDBACK_LABELS: Record<keyof FeedbackJSON, string> = {
 type Step = 'upload' | 'train' | 'feedback'
 
 export default function ArchTrainer() {
+  const isMobile = useIsMobile()
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [explanation, setExplanation] = useState<ExplanationJSON | null>(null)
@@ -123,7 +125,7 @@ export default function ArchTrainer() {
 
 
         {/* Step 1 — Upload */}
-        <Card>
+        <Card compact={isMobile}>
           <CardTitle step={1}>아키텍처 그림 업로드</CardTitle>
           {!previewUrl ? (
             <div
@@ -169,7 +171,7 @@ export default function ArchTrainer() {
 
         {/* Step 2 — User Input */}
         {step.has('train') && (
-          <Card>
+          <Card compact={isMobile}>
             <CardTitle step={2}>직접 설명해보기</CardTitle>
             <p style={{ fontSize: '0.85rem', color: C.textMuted, marginBottom: 12 }}>준비됐습니다. 먼저 직접 설명해보세요.</p>
             <textarea
@@ -197,7 +199,7 @@ export default function ArchTrainer() {
 
         {/* Step 3 — AI Explanation + Feedback */}
         {step.has('feedback') && explanation && feedback && (
-          <Card>
+          <Card compact={isMobile}>
             <CardTitle step={3}>분석 결과</CardTitle>
 
             {/* AI 설명 */}
@@ -243,9 +245,9 @@ function SectionBlock({ label, content }: { label: string; content: string }) {
   )
 }
 
-function Card({ children }: { children: React.ReactNode }) {
+function Card({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div style={{ background: 'var(--bg-base)', borderRadius: 'var(--radius-lg)', padding: 24, border: '1px solid var(--border-subtle)' }}>
+    <div style={{ background: 'var(--bg-base)', borderRadius: 'var(--radius-lg)', padding: compact ? 16 : 24, border: '1px solid var(--border-subtle)' }}>
       {children}
     </div>
   )

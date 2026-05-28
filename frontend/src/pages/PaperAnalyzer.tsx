@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/paper'
 import type { Candidate, PaperResult } from '../api/paper'
 
@@ -29,6 +30,7 @@ const C = {
 }
 
 export default function PaperAnalyzer() {
+  const isMobile = useIsMobile()
   const [query, setQuery] = useState('')
   const [state, setState] = useState<MainState>({ kind: 'idle' })
   const [sidebarData, setSidebarData] = useState<PaperResult | null>(null)
@@ -79,53 +81,79 @@ export default function PaperAnalyzer() {
     }
   }
 
+  const searchBar = (
+    <div style={{ display: 'flex', width: '100%', maxWidth: isMobile ? undefined : 580 }}>
+      <input
+        ref={inputRef}
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') doSearch() }}
+        placeholder="논문 제목 또는 URL 입력"
+        autoFocus={!isMobile}
+        style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, borderRight: 'none', borderRadius: '9999px 0 0 9999px', padding: '8px 16px', fontSize: 14, color: C.text, outline: 'none', fontFamily: 'inherit' }}
+        onFocus={e => (e.currentTarget.style.borderColor = '#aaaaaa')}
+        onBlur={e => (e.currentTarget.style.borderColor = C.border)}
+      />
+      <button
+        onClick={doSearch}
+        onMouseEnter={() => setBtnHover(true)}
+        onMouseLeave={() => setBtnHover(false)}
+        style={{ background: btnHover ? '#333333' : 'var(--selected-bg)', color: 'var(--selected-text)', border: 'none', borderRadius: '0 9999px 9999px 0', padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0, fontFamily: 'inherit' }}
+      >분석</button>
+    </div>
+  )
+
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: C.main }}>
       <AppHeader
         title="논문 분석기"
-        right={
-          <div style={{ display: 'flex', maxWidth: 580 }}>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') doSearch() }}
-              placeholder="논문 제목 또는 URL (arXiv / DOI / ACM / IEEE 등) 입력"
-              autoFocus
-              style={{ width: 420, background: C.card, border: `1px solid ${C.border}`, borderRight: 'none', borderRadius: '9999px 0 0 9999px', padding: '8px 16px', fontSize: 14, color: C.text, outline: 'none', fontFamily: 'inherit' }}
-              onFocus={e => (e.currentTarget.style.borderColor = '#aaaaaa')}
-              onBlur={e => (e.currentTarget.style.borderColor = C.border)}
-            />
-            <button
-              onClick={doSearch}
-              onMouseEnter={() => setBtnHover(true)}
-              onMouseLeave={() => setBtnHover(false)}
-              style={{ background: btnHover ? '#333333' : 'var(--selected-bg)', color: 'var(--selected-text)', border: 'none', borderRadius: '0 9999px 9999px 0', padding: '8px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s', flexShrink: 0, fontFamily: 'inherit' }}
-            >분석</button>
-          </div>
-        }
+        right={isMobile ? undefined : searchBar}
       />
 
-      {/* Body */}
-      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1, overflow: 'hidden' }}>
-        {/* Sidebar */}
-        <aside style={{ background: C.sidebar, color: C.text, padding: '32px 24px', overflowY: 'auto', height: '100%', borderRight: `1px solid ${C.border}` }}>
-          {!sidebarData ? (
-            <p style={{ color: C.textSub, fontSize: 14, lineHeight: 1.8, margin: 0 }}>논문을 검색하면<br />기본 정보와 저널 품질이<br />여기에 표시됩니다.</p>
-          ) : (
-            <SidebarContent data={sidebarData} />
-          )}
-        </aside>
+      {/* 모바일 검색 행 */}
+      {isMobile && (
+        <div style={{ padding: '8px 12px', borderBottom: `1px solid ${C.border}`, flexShrink: 0, background: C.main }}>
+          {searchBar}
+        </div>
+      )}
 
-        {/* Main */}
-        <main style={{ padding: '40px 44px 80px', overflowY: 'auto', background: C.main, minWidth: 0 }}>
-          {state.kind === 'idle' && <EmptyState />}
-          {state.kind === 'loading' && <Loader msg={state.msg} />}
-          {state.kind === 'error' && <ErrorBox msg={state.msg} />}
-          {state.kind === 'candidates' && <CandidateList items={state.items} onSelect={doAnalyzeById} />}
-          {state.kind === 'result' && <ResultView data={state.data} />}
-        </main>
-      </div>
+      {/* Body */}
+      {isMobile ? (
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <main style={{ padding: '24px 16px 40px', background: C.main, minWidth: 0 }}>
+            {state.kind === 'idle' && <EmptyState />}
+            {state.kind === 'loading' && <Loader msg={state.msg} />}
+            {state.kind === 'error' && <ErrorBox msg={state.msg} />}
+            {state.kind === 'candidates' && <CandidateList items={state.items} onSelect={doAnalyzeById} />}
+            {state.kind === 'result' && <ResultView data={state.data} />}
+          </main>
+          {sidebarData && (
+            <aside style={{ background: C.sidebar, color: C.text, padding: '24px 16px', borderTop: `1px solid ${C.border}` }}>
+              <SidebarContent data={sidebarData} />
+            </aside>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', flex: 1, overflow: 'hidden' }}>
+          {/* Sidebar */}
+          <aside style={{ background: C.sidebar, color: C.text, padding: '32px 24px', overflowY: 'auto', height: '100%', borderRight: `1px solid ${C.border}` }}>
+            {!sidebarData ? (
+              <p style={{ color: C.textSub, fontSize: 14, lineHeight: 1.8, margin: 0 }}>논문을 검색하면<br />기본 정보와 저널 품질이<br />여기에 표시됩니다.</p>
+            ) : (
+              <SidebarContent data={sidebarData} />
+            )}
+          </aside>
+
+          {/* Main */}
+          <main style={{ padding: '40px 44px 80px', overflowY: 'auto', background: C.main, minWidth: 0 }}>
+            {state.kind === 'idle' && <EmptyState />}
+            {state.kind === 'loading' && <Loader msg={state.msg} />}
+            {state.kind === 'error' && <ErrorBox msg={state.msg} />}
+            {state.kind === 'candidates' && <CandidateList items={state.items} onSelect={doAnalyzeById} />}
+            {state.kind === 'result' && <ResultView data={state.data} />}
+          </main>
+        </div>
+      )}
     </div>
   )
 }

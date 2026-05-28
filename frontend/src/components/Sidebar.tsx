@@ -31,9 +31,7 @@ export default function Sidebar({ filter, onFilter, todos }: Props) {
       className="flex flex-col h-full flex-shrink-0"
       style={{ width: 'var(--sidebar-w)', borderRight: '1px solid var(--border-subtle)', background: 'var(--bg-base)' }}
     >
-      <div style={{ padding: '20px 16px 12px' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>PRML Lab</div>
-      </div>
+      <div style={{ padding: '20px 16px 12px' }} />
 
       <nav className="flex-1 px-2">
         {navItems.map(item => (

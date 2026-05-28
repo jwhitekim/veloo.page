@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import AppHeader from '../components/AppHeader'
 import { SessionExpiredMessage } from '../components/SessionExpiredMessage'
+import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/translator'
 
 function stripHtml(html: string): string {
@@ -23,6 +24,7 @@ const POS_KO: Record<string, string> = {
 }
 
 export default function Translator() {
+  const isMobile = useIsMobile()
   const [source, setSource] = useState('')
   const [streamedText, setStreamedText] = useState('')
   const [translating, setTranslating] = useState(false)
@@ -188,6 +190,9 @@ export default function Translator() {
         .gt-icon-btn:hover { background: #f1f3f4; }
         .gt-icon-btn:disabled { opacity: 0.38; cursor: default; }
         .gt-icon-btn:disabled:hover { background: none; }
+        @media (max-width: 640px) {
+          .dict-search-input { max-width: none; width: 130px; font-size: 13px; padding: 6px 12px 6px 30px; }
+        }
         .gt-lang-btn {
           font-size: 14px; font-weight: 500; padding: 8px 12px;
           border: none; border-bottom: 2px solid transparent;
@@ -267,7 +272,7 @@ export default function Translator() {
             padding: '0 16px', height: 52,
             borderBottom: '1px solid #dadce0',
             flexShrink: 0, background: '#ffffff',
-            marginRight: dictOpen ? 360 : 0,
+            marginRight: isMobile ? 0 : (dictOpen ? 360 : 0),
           }}>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
               <button className="gt-lang-btn">언어 감지</button>
@@ -291,12 +296,15 @@ export default function Translator() {
           </div>
 
           {/* 패널 영역 */}
-          <div style={{ flex: 1, display: 'flex', minHeight: 0, marginRight: dictOpen ? 360 : 0 }}>
+          <div style={{ flex: 1, display: 'flex', minHeight: 0, flexDirection: isMobile ? 'column' : 'row', marginRight: isMobile ? 0 : (dictOpen ? 360 : 0) }}>
 
           {/* 소스 패널 */}
           <div style={{
             flex: 1, display: 'flex', flexDirection: 'column',
-            background: '#f8f9fa', borderRight: '1px solid #dadce0', minWidth: 0,
+            background: '#f8f9fa',
+            borderRight: isMobile ? 'none' : '1px solid #dadce0',
+            borderBottom: isMobile ? '1px solid #dadce0' : 'none',
+            minWidth: 0,
           }}>
             <textarea
               className="gt-source-ta"
@@ -312,7 +320,7 @@ export default function Translator() {
               placeholder="텍스트 입력"
               style={{
                 flex: 1, border: 'none', resize: 'none',
-                padding: '16px 24px', fontSize: 20, lineHeight: 1.75,
+                padding: '16px 24px', fontSize: isMobile ? 16 : 20, lineHeight: 1.75,
                 fontFamily: 'inherit', background: 'transparent',
                 color: '#202124', outline: 'none', minHeight: 0,
               }}
@@ -404,7 +412,7 @@ export default function Translator() {
           {dictOpen && (
           <div style={{
             position: 'fixed', right: 0, top: 56,
-            width: 360, height: 'calc(100vh - 56px)',
+            width: isMobile ? '100vw' : 360, height: 'calc(100vh - 56px)',
             borderLeft: '1px solid #dadce0',
             background: '#ffffff',
             display: 'flex', flexDirection: 'column',

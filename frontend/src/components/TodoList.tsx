@@ -16,7 +16,7 @@ interface Props {
   onToggle: (id: number) => void
   onEdit: (id: number, name: string) => void
   onAdd: (data: { name: string; memo: string; priority: Priority; deadline: string }) => Promise<void>
-  width: number
+  width?: number
 }
 
 export default function TodoList({ todos, filter, selectedId, onSelect, onToggle, onEdit, onAdd, width }: Props) {
@@ -34,8 +34,8 @@ export default function TodoList({ todos, filter, selectedId, onSelect, onToggle
 
   return (
     <div
-      className="flex flex-col h-full border-r flex-shrink-0"
-      style={{ width, borderRight: '1px solid var(--border-subtle)', background: 'var(--bg-additive)' }}
+      className="flex flex-col h-full border-r"
+      style={{ width: width ?? '100%', flexShrink: width !== undefined ? 0 : undefined, borderRight: '1px solid var(--border-subtle)', background: 'var(--bg-additive)' }}
     >
       <div className="px-3 pt-4 pb-2">
         <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{filterLabel[filter]}</div>
