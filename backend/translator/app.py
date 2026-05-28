@@ -1,4 +1,5 @@
 """Translation Studio — FastAPI + Claude API"""
+import asyncio
 import json
 import os
 import re
@@ -18,6 +19,13 @@ app = FastAPI(title="Translation Studio")
 
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
 _client = anthropic.AsyncAnthropic()
+
+_supabase_url = os.environ.get("SUPABASE_URL")
+_supabase_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+_supabase = None
+if _supabase_url and _supabase_key:
+    from supabase import create_client
+    _supabase = create_client(_supabase_url, _supabase_key)
 
 # Context Layer 1: Role & Domain
 _SYSTEM_PROMPT = """\
@@ -171,6 +179,33 @@ async def translate(req: TranslateRequest):
     if not text:
         return JSONResponse({"error": "텍스트가 비어 있습니다."}, status_code=400)
 
+    # Cache check
+    if _supabase:
+        try:
+            cached_res = await asyncio.to_thread(
+                lambda: _supabase.table("translation_history")
+                    .select("translated_text")
+                    .eq("source_text", text)
+                    .limit(1)
+                    .execute()
+            )
+            if cached_res.data:
+                cached_text = cached_res.data[0]["translated_text"]
+
+                async def cached_stream():
+                    yield cached_text
+
+                return StreamingResponse(
+                    cached_stream(),
+                    media_type="text/plain; charset=utf-8",
+                    headers={"X-Cache": "HIT"},
+                )
+        except Exception:
+            pass
+
+    tx_type = "word" if len(text.split()) <= 2 else "sentence"
+    collected: list[str] = []
+
     async def stream():
         async with _client.messages.stream(
             model=CLAUDE_MODEL,
@@ -179,9 +214,40 @@ async def translate(req: TranslateRequest):
             messages=[{"role": "user", "content": f"{_EXAMPLES}\n\nINPUT:\n{text}"}],
         ) as s:
             async for chunk in s.text_stream:
+                collected.append(chunk)
                 yield chunk
 
+        if _supabase:
+            try:
+                full_text = "".join(collected)
+                await asyncio.to_thread(
+                    lambda: _supabase.table("translation_history").insert({
+                        "source_text": text,
+                        "translated_text": full_text,
+                        "type": tx_type,
+                    }).execute()
+                )
+            except Exception:
+                pass
+
     return StreamingResponse(stream(), media_type="text/plain; charset=utf-8")
+
+
+@app.get("/api/history")
+async def get_translation_history():
+    if not _supabase:
+        return JSONResponse({"items": []})
+    try:
+        res = await asyncio.to_thread(
+            lambda: _supabase.table("translation_history")
+                .select("id,source_text,translated_text,type,created_at")
+                .order("created_at", desc=True)
+                .limit(10)
+                .execute()
+        )
+        return JSONResponse({"items": res.data})
+    except Exception:
+        return JSONResponse({"items": []})
 
 
 @app.get("/api/naver-dict")

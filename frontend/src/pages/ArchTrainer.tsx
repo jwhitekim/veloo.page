@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { RotateCcw } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/archTrainer'
-import type { ExplanationJSON, FeedbackJSON } from '../api/archTrainer'
+import type { ExplanationJSON, FeedbackJSON, ArchHistoryItem } from '../api/archTrainer'
 
 const C = {
   bg:         'var(--bg-base)',
@@ -47,9 +47,13 @@ export default function ArchTrainer() {
   const [loadingExplain, setLoadingExplain] = useState(false)
   const [loadingFeedback, setLoadingFeedback] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [historyId, setHistoryId] = useState<number | null>(null)
+  const [archHistory, setArchHistory] = useState<ArchHistoryItem[]>([])
   const [dragOver, setDragOver] = useState(false)
   const [textareaFocused, setTextareaFocused] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { api.getArchHistory().then(setArchHistory) }, [])
 
   const show = (s: Step) => setStep(prev => new Set([...prev, s]))
 
@@ -74,6 +78,7 @@ export default function ArchTrainer() {
     try {
       const data = await api.explain(imageFile)
       setExplanation(data.explanation)
+      setHistoryId(data.history_id)
       show('train')
     } catch (e) {
       setError((e as Error).message)
@@ -88,7 +93,7 @@ export default function ArchTrainer() {
     setError(null)
     setStep(prev => { const s = new Set(prev); s.delete('feedback'); return s })
     try {
-      const data = await api.feedback(explanation!, userText)
+      const data = await api.feedback(explanation!, userText, historyId)
       setFeedback(data.feedback)
       show('feedback')
     } catch (e) {
@@ -101,12 +106,22 @@ export default function ArchTrainer() {
   const resetAll = () => {
     resetUpload()
     setExplanation(null); setUserText(''); setFeedback(null)
+    setHistoryId(null)
     setStep(new Set(['upload']))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const loadFromHistory = (item: ArchHistoryItem) => {
+    setExplanation(item.explanation)
+    setHistoryId(item.id)
+    setFeedback(null)
+    setUserText('')
+    setStep(new Set(['upload', 'train']))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', color: C.text }}>
+    <div style={{ background: C.bg, minHeight: '100dvh', color: C.text }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .reselect-btn { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; cursor: pointer; background: rgba(255,255,255,0.88); color: #0f0f0f; border: 1px solid #e5e5e5; transition: background 0.15s; }
@@ -123,6 +138,39 @@ export default function ArchTrainer() {
           </div>
         )}
 
+
+        {/* History */}
+        {!previewUrl && archHistory.length > 0 && (
+          <Card compact={isMobile}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', color: C.textMuted, marginBottom: 12 }}>최근 분석</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              {archHistory.map((item, i) => (
+                <button
+                  key={item.id}
+                  onClick={() => loadFromHistory(item)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 0', textAlign: 'left', background: 'none', border: 'none',
+                    borderBottom: i < archHistory.length - 1 ? `1px solid ${C.border}` : 'none',
+                    cursor: 'pointer', width: '100%',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13, color: C.text, fontWeight: 500 }}>
+                      {item.image_name ?? '이미지'}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+                      {item.explanation.overview.slice(0, 60)}…
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 12, color: C.textMuted, marginLeft: 12, flexShrink: 0 }}>
+                    {new Date(item.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Step 1 — Upload */}
         <Card compact={isMobile}>

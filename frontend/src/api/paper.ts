@@ -67,3 +67,23 @@ export async function analyzePdf(file: File): Promise<PaperResult & { figures: u
   await checkRes(res, 'PDF 분석 오류')
   return res.json()
 }
+
+export interface PaperHistoryItem {
+  id: number
+  title: string
+  paper_id: string | null
+  query: string | null
+  created_at: string
+  result: PaperResult
+}
+
+export async function getHistory(): Promise<PaperHistoryItem[]> {
+  try {
+    const res = await fetch(`${BASE}/history`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return data.items ?? []
+  } catch {
+    return []
+  }
+}

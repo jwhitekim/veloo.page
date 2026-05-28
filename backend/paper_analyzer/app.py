@@ -34,6 +34,49 @@ app.add_middleware(
 )
 
 
+def _check_paper_cache(paper_id: str) -> dict | None:
+    if not _supabase or not paper_id:
+        return None
+    try:
+        res = _supabase.table("paper_history").select("result").eq("paper_id", paper_id).limit(1).execute()
+        if res.data:
+            return res.data[0]["result"]
+    except Exception:
+        pass
+    return None
+
+
+def _save_paper_history(query: str | None, paper_id: str | None, title: str, result: dict) -> None:
+    if not _supabase:
+        return
+    try:
+        _supabase.table("paper_history").insert({
+            "query": query,
+            "paper_id": paper_id,
+            "title": title,
+            "result": result,
+        }).execute()
+    except Exception:
+        pass
+
+
+@app.get("/history")
+async def get_history():
+    if not _supabase:
+        return JSONResponse({"items": []})
+    try:
+        res = await asyncio.to_thread(
+            lambda: _supabase.table("paper_history")
+                .select("id,title,paper_id,query,created_at,result")
+                .order("created_at", desc=True)
+                .limit(10)
+                .execute()
+        )
+        return JSONResponse({"items": res.data})
+    except Exception:
+        return JSONResponse({"items": []})
+
+
 @app.post("/search")
 async def search(query: str = Form(...)):
     try:
@@ -45,7 +88,6 @@ async def search(query: str = Form(...)):
                 return JSONResponse({"type": "unsupported_url"})
             return JSONResponse({"type": "url", "query": query})
 
-        # 제목 검색 → 후보 5개
         results = await asyncio.to_thread(search_papers_by_title, query, 5)
         candidates = [
             {
@@ -69,15 +111,30 @@ async def search(query: str = Form(...)):
 @app.post("/analyze")
 async def analyze(paper_id: str = Form(None), url: str = Form(None)):
     try:
-        if url:
-            paper = await asyncio.to_thread(fetch_paper_by_url, url)
-        elif paper_id:
+        paper = None
+        resolved_paper_id = paper_id
+
+        if paper_id:
+            cached = await asyncio.to_thread(_check_paper_cache, paper_id)
+            if cached:
+                return JSONResponse({**cached, "from_cache": True})
             paper = await asyncio.to_thread(fetch_paper_by_id, paper_id)
+        elif url:
+            paper = await asyncio.to_thread(fetch_paper_by_url, url)
+            if paper:
+                resolved_paper_id = paper.get("paperId")
+                if resolved_paper_id:
+                    cached = await asyncio.to_thread(_check_paper_cache, resolved_paper_id)
+                    if cached:
+                        return JSONResponse({**cached, "from_cache": True})
         else:
             return JSONResponse({"error": "paper_id 또는 url이 필요합니다."})
 
         if not paper:
             return JSONResponse({"error": "논문을 찾을 수 없습니다."})
+
+        if not resolved_paper_id:
+            resolved_paper_id = paper.get("paperId")
 
         external_ids = paper.get("externalIds") or {}
         basic = {
@@ -94,29 +151,11 @@ async def analyze(paper_id: str = Form(None), url: str = Form(None)):
         authors = await asyncio.to_thread(enrich_authors, paper)
         quality = lookup_venue(basic["venue"])
 
-        if _supabase:
-            try:
-                _supabase.table("paper_analyses").insert({
-                    "title": basic["title"],
-                    "doi": basic["doi"],
-                    "arxiv_id": basic["arxivId"],
-                    "domain": analysis.get("domain"),
-                    "keywords": analysis.get("keywords"),
-                    "problem_short": analysis.get("problem_short"),
-                    "method_short": analysis.get("method_short"),
-                    "conclusion_short": analysis.get("conclusion_short"),
-                    "full_result": analysis,
-                    "source": "search",
-                }).execute()
-            except Exception:
-                pass
+        result = {"basic": basic, "analysis": analysis, "authors": authors, "quality": quality}
 
-        return JSONResponse({
-            "basic": basic,
-            "analysis": analysis,
-            "authors": authors,
-            "quality": quality,
-        })
+        await asyncio.to_thread(_save_paper_history, url or paper_id, resolved_paper_id, basic["title"], result)
+
+        return JSONResponse(result)
 
     except Exception:
         logging.exception("analyze error")
@@ -142,12 +181,12 @@ async def analyze_pdf(file: UploadFile = File(...)):
         arxiv_id = extracted.get("arxivId")
         figures  = extracted.get("figures", [])
 
-        # Try to enrich from Semantic Scholar
         paper = None
         venue = ""
         year = None
         citation_count = None
         authors = []
+        resolved_paper_id = None
 
         if arxiv_id:
             try:
@@ -170,6 +209,7 @@ async def analyze_pdf(file: UploadFile = File(...)):
             year          = paper.get("year")
             citation_count = paper.get("citationCount")
             authors       = await asyncio.to_thread(enrich_authors, paper)
+            resolved_paper_id = paper.get("paperId")
 
         basic = {
             "title": title,
@@ -183,30 +223,11 @@ async def analyze_pdf(file: UploadFile = File(...)):
         analysis = await asyncio.to_thread(analyze_paper, abstract, title, doi)
         quality  = lookup_venue(venue)
 
-        if _supabase:
-            try:
-                _supabase.table("paper_analyses").insert({
-                    "title": title,
-                    "doi": doi or None,
-                    "arxiv_id": arxiv_id,
-                    "domain": analysis.get("domain"),
-                    "keywords": analysis.get("keywords"),
-                    "problem_short": analysis.get("problem_short"),
-                    "method_short": analysis.get("method_short"),
-                    "conclusion_short": analysis.get("conclusion_short"),
-                    "full_result": analysis,
-                    "source": "pdf",
-                }).execute()
-            except Exception:
-                pass
+        result = {"basic": basic, "analysis": analysis, "authors": authors, "quality": quality}
 
-        return JSONResponse({
-            "basic": basic,
-            "analysis": analysis,
-            "authors": authors,
-            "quality": quality,
-            "figures": figures,
-        })
+        await asyncio.to_thread(_save_paper_history, None, resolved_paper_id, title, result)
+
+        return JSONResponse({**result, "figures": figures})
 
     except Exception:
         logging.exception("analyze-pdf error")

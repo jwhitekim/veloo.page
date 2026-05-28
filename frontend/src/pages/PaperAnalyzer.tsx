@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/paper'
-import type { Candidate, PaperResult } from '../api/paper'
+import type { Candidate, PaperResult, PaperHistoryItem } from '../api/paper'
 
 type MainState =
   | { kind: 'idle' }
@@ -35,7 +35,12 @@ export default function PaperAnalyzer() {
   const [state, setState] = useState<MainState>({ kind: 'idle' })
   const [sidebarData, setSidebarData] = useState<PaperResult | null>(null)
   const [btnHover, setBtnHover] = useState(false)
+  const [history, setHistory] = useState<PaperHistoryItem[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    api.getHistory().then(setHistory)
+  }, [])
 
   const doSearch = async () => {
     const q = query.trim()
@@ -59,12 +64,17 @@ export default function PaperAnalyzer() {
     }
   }
 
+  const loadResult = (data: PaperResult) => {
+    setSidebarData(data)
+    setState({ kind: 'result', data })
+    api.getHistory().then(setHistory)
+  }
+
   const doAnalyzeById = async (paperId: string) => {
     setState({ kind: 'loading', msg: '분석 중 (약 10~20초 소요)' })
     try {
       const data = await api.analyzeById(paperId)
-      setSidebarData(data)
-      setState({ kind: 'result', data })
+      loadResult(data)
     } catch (e) {
       setState({ kind: 'error', msg: (e as Error).message })
     }
@@ -74,8 +84,7 @@ export default function PaperAnalyzer() {
     setState({ kind: 'loading', msg: '분석 중 (약 10~20초 소요)' })
     try {
       const data = await api.analyzeByUrl(url)
-      setSidebarData(data)
-      setState({ kind: 'result', data })
+      loadResult(data)
     } catch (e) {
       setState({ kind: 'error', msg: (e as Error).message })
     }
@@ -141,6 +150,23 @@ export default function PaperAnalyzer() {
               <p style={{ color: C.textSub, fontSize: 14, lineHeight: 1.8, margin: 0 }}>논문을 검색하면<br />기본 정보와 저널 품질이<br />여기에 표시됩니다.</p>
             ) : (
               <SidebarContent data={sidebarData} />
+            )}
+            {history.length > 0 && (
+              <div style={{ marginTop: 28, paddingTop: 28, borderTop: `1px solid ${C.border}` }}>
+                <SideLabel>🕘 최근 검색</SideLabel>
+                {history.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setSidebarData(item.result); setState({ kind: 'result', data: item.result }) }}
+                    style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0', borderBottom: `1px dashed ${C.border}` }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+                  >
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: C.text, lineHeight: 1.4, wordBreak: 'keep-all' }}>{item.title}</div>
+                    <div style={{ fontSize: '0.72rem', color: C.textMuted, marginTop: 2 }}>{new Date(item.created_at).toLocaleDateString('ko-KR')}</div>
+                  </button>
+                ))}
+              </div>
             )}
           </aside>
 

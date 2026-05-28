@@ -1,4 +1,5 @@
 """논문 아키텍처 설명력 훈련 앱 — FastAPI 백엔드"""
+import asyncio
 import base64
 import json
 import logging
@@ -19,6 +20,13 @@ client = anthropic.AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 MODEL = os.environ.get("CLAUDE_MODEL_SMART", "claude-sonnet-4-6")
 _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+_supabase_url = os.environ.get("SUPABASE_URL")
+_supabase_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_KEY")
+_supabase = None
+if _supabase_url and _supabase_key:
+    from supabase import create_client
+    _supabase = create_client(_supabase_url, _supabase_key)
 
 EXPLAIN_PROMPT = """\
 이 논문 아키텍처 그림을 분석해줘.
@@ -58,6 +66,7 @@ def _parse_json(text: str) -> dict:
 class FeedbackRequest(BaseModel):
     ai_explanation: dict
     user_explanation: str
+    history_id: int | None = None
 
 
 @app.post("/api/explain")
@@ -98,7 +107,21 @@ async def explain(image: UploadFile = File(...)):
         logging.exception("arch_trainer error")
         return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)
 
-    return JSONResponse({"explanation": explanation_json})
+    history_id = None
+    if _supabase:
+        try:
+            res = await asyncio.to_thread(
+                lambda: _supabase.table("arch_history").insert({
+                    "image_name": image.filename,
+                    "explanation": explanation_json,
+                }).execute()
+            )
+            if res.data:
+                history_id = res.data[0]["id"]
+        except Exception:
+            pass
+
+    return JSONResponse({"explanation": explanation_json, "history_id": history_id})
 
 
 @app.post("/api/feedback")
@@ -122,4 +145,32 @@ async def feedback(req: FeedbackRequest):
         logging.exception("arch_trainer error")
         return JSONResponse({"error": "서버 오류가 발생했습니다."}, status_code=500)
 
+    if _supabase and req.history_id:
+        try:
+            await asyncio.to_thread(
+                lambda: _supabase.table("arch_history")
+                    .update({"feedback": feedback_json})
+                    .eq("id", req.history_id)
+                    .execute()
+            )
+        except Exception:
+            pass
+
     return JSONResponse({"feedback": feedback_json})
+
+
+@app.get("/api/history")
+async def get_arch_history():
+    if not _supabase:
+        return JSONResponse({"items": []})
+    try:
+        res = await asyncio.to_thread(
+            lambda: _supabase.table("arch_history")
+                .select("id,image_name,explanation,created_at")
+                .order("created_at", desc=True)
+                .limit(5)
+                .execute()
+        )
+        return JSONResponse({"items": res.data})
+    except Exception:
+        return JSONResponse({"items": []})
