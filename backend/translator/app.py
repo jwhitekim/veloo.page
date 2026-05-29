@@ -234,10 +234,15 @@ async def translate(req: TranslateRequest):
 
 
 @app.get("/api/history")
-async def get_translation_history():
+async def get_translation_history(count: bool = False):
     if not _supabase:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
     try:
+        if count:
+            res = await asyncio.to_thread(
+                lambda: _supabase.table("translation_history").select("id", count="exact").execute()
+            )
+            return JSONResponse({"count": res.count or 0})
         res = await asyncio.to_thread(
             lambda: _supabase.table("translation_history")
                 .select("id,source_text,translated_text,type,created_at")
@@ -247,7 +252,7 @@ async def get_translation_history():
         )
         return JSONResponse({"items": res.data})
     except Exception:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
 
 
 @app.get("/api/naver-dict")

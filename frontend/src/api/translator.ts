@@ -37,6 +37,15 @@ export interface TranslationHistoryItem {
   created_at: string
 }
 
+export async function getTranslationCount(): Promise<number> {
+  try {
+    const res = await fetch(`${BASE}/api/history?count=true`)
+    if (!res.ok) return 0
+    const data = await res.json()
+    return data.count ?? 0
+  } catch { return 0 }
+}
+
 export async function getTranslationHistory(): Promise<TranslationHistoryItem[]> {
   try {
     const res = await fetch(`${BASE}/api/history`)

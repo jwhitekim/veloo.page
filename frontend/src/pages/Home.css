@@ -11,7 +11,6 @@
   height: var(--header-h);
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 var(--space-xl);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
@@ -28,40 +27,79 @@
   letter-spacing: -0.01em;
 }
 
-.home-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.home-nav-link {
-  font-size: 13px;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: color 0.15s;
-}
-
-.home-nav-link:hover {
-  color: var(--text-primary);
-}
-
 /* ── Main ────────────────────────────────────────────────────────────────── */
 .home-main {
   flex: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
   padding: 32px 40px;
+  box-sizing: border-box;
 }
 
-/* ── Grid ────────────────────────────────────────────────────────────────── */
+/* ── App Card Grid ───────────────────────────────────────────────────────── */
+.app-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.app-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-decoration: none;
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  transition: background 0.15s;
+}
+
+.app-card:hover {
+  background: var(--bg-additive);
+}
+
+.app-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.app-card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.app-card-count {
+  font-size: 13px;
+  color: var(--text-disabled);
+  margin-top: 16px;
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── Bottom Grid ─────────────────────────────────────────────────────────── */
 .home-grid {
   display: flex;
-  gap: 32px;
+  gap: 24px;
+  margin-top: 24px;
   align-items: flex-start;
+}
+
+/* ── Shared Card ─────────────────────────────────────────────────────────── */
+.home-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 20px 24px;
 }
 
 /* ── Left Section ────────────────────────────────────────────────────────── */
 .home-section {
   flex: 2;
   min-width: 0;
+  min-height: 380px;
 }
 
 .section-header {
@@ -88,32 +126,83 @@
   color: var(--text-primary);
 }
 
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+.empty-state {
+  border: 1px dashed var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--bg-additive);
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 0.3; }
+}
+
+.skeleton-circle,
+.skeleton-bar,
+.skeleton-title-bar {
+  background: var(--bg-additive);
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-bar {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-bar--short {
+  width: 70%;
+}
+
+.skeleton-title-bar {
+  width: 64px;
+  height: 11px;
+  margin-bottom: 12px;
+}
+
 .skeleton-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 4px 0;
+  gap: 4px;
 }
 
-.skeleton-row {
-  height: 20px;
-  background: var(--bg-additive);
-  border-radius: 4px;
-  animation: home-pulse 1.5s ease-in-out infinite;
+.skeleton-todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
 }
 
-@keyframes home-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* ── Empty ───────────────────────────────────────────────────────────────── */
-.home-empty {
-  font-size: 14px;
-  color: var(--text-secondary);
-  text-align: center;
-  padding: 32px 0;
+.skeleton-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ── Todo Items ──────────────────────────────────────────────────────────── */
@@ -189,16 +278,16 @@
   font-family: inherit;
   color: var(--text-secondary);
   background: none;
-  border: 1px dashed var(--border-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
-  transition: color 0.15s, border-color 0.15s;
+  transition: all 0.2s ease;
 }
 
 .todo-add-btn:hover {
+  background: var(--bg-additive);
   color: var(--text-primary);
-  border-color: var(--border);
 }
 
 /* ── Right Aside ─────────────────────────────────────────────────────────── */
@@ -206,10 +295,13 @@
   flex: 1;
   max-width: 320px;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.activity-section + .activity-section {
-  margin-top: 24px;
+.activity-card {
+  padding: 16px 20px;
 }
 
 .activity-title {
@@ -242,17 +334,10 @@
   color: var(--text-secondary);
 }
 
-.activity-empty {
-  font-size: 13px;
-  color: var(--text-disabled);
-  padding: 8px 0;
-}
-
 /* ── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .home-main { padding: 24px 16px; }
+  .app-grid { grid-template-columns: repeat(2, 1fr); }
   .home-grid { flex-direction: column; }
   .home-aside { max-width: none; width: 100%; }
-  .home-nav { gap: 12px; }
-  .home-nav-link { font-size: 12px; }
 }

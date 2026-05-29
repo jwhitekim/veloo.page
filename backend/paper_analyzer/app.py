@@ -61,10 +61,15 @@ def _save_paper_history(query: str | None, paper_id: str | None, title: str, res
 
 
 @app.get("/history")
-async def get_history():
+async def get_history(count: bool = False):
     if not _supabase:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
     try:
+        if count:
+            res = await asyncio.to_thread(
+                lambda: _supabase.table("paper_history").select("id", count="exact").execute()
+            )
+            return JSONResponse({"count": res.count or 0})
         res = await asyncio.to_thread(
             lambda: _supabase.table("paper_history")
                 .select("id,title,paper_id,query,created_at,result")
@@ -74,7 +79,7 @@ async def get_history():
         )
         return JSONResponse({"items": res.data})
     except Exception:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
 
 
 @app.post("/search")

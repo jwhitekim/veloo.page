@@ -160,10 +160,15 @@ async def feedback(req: FeedbackRequest):
 
 
 @app.get("/api/history")
-async def get_arch_history():
+async def get_arch_history(count: bool = False):
     if not _supabase:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
     try:
+        if count:
+            res = await asyncio.to_thread(
+                lambda: _supabase.table("arch_history").select("id", count="exact").execute()
+            )
+            return JSONResponse({"count": res.count or 0})
         res = await asyncio.to_thread(
             lambda: _supabase.table("arch_history")
                 .select("id,image_name,explanation,created_at")
@@ -173,4 +178,4 @@ async def get_arch_history():
         )
         return JSONResponse({"items": res.data})
     except Exception:
-        return JSONResponse({"items": []})
+        return JSONResponse({"count": 0} if count else {"items": []})
