@@ -196,7 +196,7 @@ export default function Login() {
                 lineHeight: 1.15,
                 letterSpacing: '-0.025em',
               }}>
-                Research Toolkit
+                Veloo
               </div>
               <div style={{
                 fontSize: 'clamp(36px, 6vw, 52px)',
@@ -205,7 +205,7 @@ export default function Login() {
                 lineHeight: 1.15,
                 letterSpacing: '-0.025em',
               }}>
-                For the Lab
+                Enter with intent
               </div>
             </div>
 

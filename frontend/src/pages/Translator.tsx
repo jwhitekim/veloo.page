@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Check, Copy, Loader2, Search, Volume2, X } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { SessionExpiredMessage } from '../components/SessionExpiredMessage'
-import { useIsMobile } from '../hooks/useIsMobile'
 import * as api from '../api/translator'
 import type { TranslationHistoryItem } from '../api/translator'
+import './Translator.css'
 
 function stripHtml(html: string): string {
   const el = document.createElement('div')
@@ -12,12 +13,6 @@ function stripHtml(html: string): string {
 }
 
 const MAX_CHARS = 5000
-
-const LEVEL_STYLE: Record<string, { background: string; color: string }> = {
-  beginner:     { background: '#e6f4ea', color: '#137333' },
-  intermediate: { background: '#e8f0fe', color: '#1a73e8' },
-  general:      { background: '#f1f3f4', color: '#5f6368' },
-}
 
 const POS_KO: Record<string, string> = {
   VERB: '동사', NOUN: '명사', ADJ: '형용사', ADV: '부사',
@@ -32,7 +27,6 @@ function checkIsWord(text: string): boolean {
 }
 
 export default function Translator() {
-  const isMobile = useIsMobile()
   const [source, setSource] = useState('')
   const [txHistory, setTxHistory] = useState<TranslationHistoryItem[]>([])
   const [streamedText, setStreamedText] = useState('')
@@ -91,16 +85,15 @@ export default function Translator() {
     } catch (e) {
       if ((e as DOMException).name === 'AbortError') return
       setError((e as Error).message)
-      setStreamedText('')
       setTranslating(false)
     }
   }, [])
 
-  const openDict = async (word: string) => {
+  const openDict = async (word: string, openPanel = true) => {
     if (!word.trim()) return
     setDictQuery(word)
     setDictPanelInput(word)
-    setDictOpen(true)
+    if (openPanel) setDictOpen(true)
     setDictLoading(true)
     try {
       const data = await api.naverDict(word)
@@ -167,413 +160,312 @@ export default function Translator() {
       setError('')
       setSessionExpired(false)
       setTranslating(false)
+      setDictResult(null)
       return
     }
     if (checkIsWord(clamped)) {
-      abortRef.current?.abort()
-      setStreamedText('')
-      setError('')
-      setTranslating(false)
-      timerRef.current = setTimeout(() => openDict(clamped.trim()), 300)
+      timerRef.current = setTimeout(() => {
+        doTranslate(clamped.trim())
+        openDict(clamped.trim(), false)
+      }, 300)
     } else {
-      setDictOpen(false)
-      timerRef.current = setTimeout(() => doTranslate(clamped), 300)
+      setDictResult(null)
+      timerRef.current = setTimeout(() => doTranslate(clamped.trim()), 300)
     }
   }
 
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100vh',
-      overflow: 'hidden',
-      background: '#ffffff',
-      fontFamily: 'var(--font-sans)',
-      color: '#202124',
-    }}>
-      <style>{`
-        @keyframes blink { 0%, 100% { opacity: 1 } 50% { opacity: 0 } }
-        @keyframes gt-spin { to { transform: rotate(360deg) } }
-        .gt-source-ta::placeholder { color: #80868b; }
-        .gt-icon-btn {
-          border: none; background: none; cursor: pointer;
-          border-radius: 50%; padding: 8px;
-          display: flex; align-items: center; justify-content: center;
-          transition: background 0.15s; color: #5f6368;
-        }
-        .gt-icon-btn:hover { background: #f1f3f4; }
-        .gt-icon-btn:disabled { opacity: 0.38; cursor: default; }
-        .gt-icon-btn:disabled:hover { background: none; }
-        .gt-lang-btn {
-          font-size: 14px; font-weight: 500; padding: 8px 12px;
-          border: none; border-bottom: 2px solid transparent;
-          border-radius: 0; background: transparent;
-          color: #5f6368; cursor: pointer; transition: background 0.15s;
-          font-family: inherit;
-        }
-        .gt-lang-btn:hover:not(.active) { background: #f1f3f4; border-radius: 4px; }
-        .gt-lang-btn.active { color: #1a73e8; border-bottom: 2px solid #1a73e8; }
-        .dict-pos-header {
-          font-size: 14px; font-weight: 600; color: #202124;
-          margin: 16px 0 8px; padding-bottom: 4px;
-          border-bottom: 1px solid #f1f3f4;
-        }
-        .dict-def-row { display: flex; gap: 12px; padding: 8px 0; }
-        .dict-def-number { min-width: 20px; font-size: 14px; color: #5f6368; flex-shrink: 0; padding-top: 1px; }
-        .dict-def-body { flex: 1; min-width: 0; }
-        .dict-def-text { font-size: 14px; color: #202124; line-height: 1.5; }
-        .dict-def-example { margin-top: 4px; }
-        .dict-def-example q { font-size: 13px; color: #5f6368; font-style: normal; quotes: none; }
-        .dict-synonyms { margin-top: 6px; font-size: 13px; }
-        .dict-synonyms-label { color: #5f6368; }
-        .dict-synonym { color: #1a73e8; cursor: pointer; }
-        .dict-synonym:hover { text-decoration: underline; }
-        .dict-example-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f3f4; }
-        .dict-example-icon { color: #dadce0; font-size: 18px; flex-shrink: 0; line-height: 1.4; }
-        .dict-example-body { flex: 1; min-width: 0; }
-        .dict-example-ori { font-size: 14px; color: #202124; line-height: 1.5; }
-        .dict-example-ori b { font-weight: 600; }
-        .dict-example-trans { font-size: 13px; color: #5f6368; margin-top: 3px; }
-        .dict-close {
-          background: transparent; border: none; font-size: 18px;
-          color: #5f6368; cursor: pointer; padding: 4px 8px;
-          border-radius: 4px; line-height: 1; flex-shrink: 0;
-        }
-        .dict-close:hover { background: #f1f3f4; }
-        .dict-panel-search {
-          width: 100%; padding: 7px 14px 7px 34px;
-          font-size: 14px; border: 1.5px solid #dadce0;
-          border-radius: 4px; outline: none;
-          background: #f8f9fa; color: #202124;
-          transition: border-color 0.15s; font-family: inherit;
-          box-sizing: border-box;
-        }
-        .dict-panel-search::placeholder { color: #80868b; }
-        .dict-panel-search:hover { border-color: #bdc1c6; }
-        .dict-panel-search:focus { border-color: #1a73e8; border-width: 2px; background: #ffffff; }
-        .gt-dict-entry:hover { background: #f8f9fa; }
-      `}</style>
+  const defs = dictResult?.definitions ?? []
+  const exs = dictResult?.examples ?? []
+  const syns = dictResult?.synonyms ?? []
+  const groupedDefs = defs.reduce<Record<string, typeof defs>>((acc, d) => {
+    const key = d.pos || '기타'
+    acc[key] = [...(acc[key] ?? []), d]
+    return acc
+  }, {})
 
+  return (
+    <>
+    <div className="translator-root">
       <AppHeader title="번역" />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <main className={`translator-shell${dictOpen ? ' has-dict' : ''}`}>
+        <section className="translator-workspace">
+          <div className="translator-panel translator-panel--source">
+            <div className="translator-panel-header">
+              <div>
+                <span className="translator-label">Source</span>
+                <span className="translator-language">English</span>
+              </div>
+              {source && (
+                <button className="translator-icon-btn" onClick={handleClear} title="지우기" type="button">
+                  <X size={15} />
+                </button>
+              )}
+            </div>
 
-        {/* 언어 바 */}
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          padding: '0 16px', height: 52,
-          borderBottom: '1px solid #dadce0',
-          flexShrink: 0, background: '#ffffff',
-          marginRight: isMobile ? 0 : (dictOpen ? 360 : 0),
-        }}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <button className="gt-lang-btn">언어 감지</button>
-            <button className="gt-lang-btn active">영어</button>
-            <button className="gt-lang-btn">일본어</button>
-          </div>
-          <button disabled style={{
-            width: 40, height: 40, border: '1px solid #dadce0', borderRadius: '50%',
-            background: '#fff', cursor: 'default', opacity: 0.45,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#5f6368">
-              <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
-            </svg>
-          </button>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 8 }}>
-            <button className="gt-lang-btn active">한국어</button>
-            <button className="gt-lang-btn">영어</button>
-            <button className="gt-lang-btn">일본어</button>
-          </div>
-        </div>
-
-        {/* 패널 영역 */}
-        <div style={{
-          flex: 1, display: 'flex', minHeight: 0,
-          flexDirection: isMobile ? 'column' : 'row',
-          marginRight: isMobile ? 0 : (dictOpen ? 360 : 0),
-        }}>
-
-          {/* 소스 패널 */}
-          <div style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            background: '#f8f9fa',
-            borderRight: isMobile ? 'none' : '1px solid #dadce0',
-            borderBottom: isMobile ? '1px solid #dadce0' : 'none',
-            minWidth: 0,
-          }}>
             <textarea
-              className="gt-source-ta"
+              className="translator-textarea"
               value={source}
               onChange={e => handleInput(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Enter' && e.ctrlKey) {
                   e.preventDefault()
                   clearTimeout(timerRef.current)
-                  if (!checkIsWord(source)) doTranslate(source)
+                  doTranslate(source.trim())
                 }
               }}
               placeholder="텍스트 입력"
-              style={{
-                flex: 1, border: 'none', resize: 'none',
-                padding: '16px 24px', fontSize: isMobile ? 16 : 20, lineHeight: 1.75,
-                fontFamily: 'inherit', background: 'transparent',
-                color: '#202124', outline: 'none', minHeight: 0,
-              }}
             />
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '0 16px', height: 44, flexShrink: 0,
-              borderTop: '1px solid #dadce0',
-            }}>
-              <span style={{ fontSize: 12, color: '#80868b' }}>
-                {source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
-              </span>
-              {source && (
-                <button className="gt-icon-btn" onClick={handleClear} title="지우기">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                  </svg>
-                </button>
-              )}
+
+            <div className="translator-panel-footer">
+              <span>{source.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}</span>
+              <span>{sourceIsWord && source ? 'Dictionary' : 'Auto translate'}</span>
             </div>
           </div>
 
-          {/* 결과 패널 */}
-          <div style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            background: '#ffffff', minWidth: 0,
-          }}>
-            <div style={{ flex: 1, padding: '16px 24px', overflowY: 'auto' }}>
+          <div className="translator-panel translator-panel--result">
+            <div className="translator-panel-header">
+              <div>
+                <span className="translator-label">Translation</span>
+                <span className="translator-language">Korean</span>
+              </div>
+              <button
+                className="translator-icon-btn"
+                onClick={handleCopy}
+                disabled={!streamedText || translating}
+                title={copied ? '복사됨' : '복사'}
+                type="button"
+              >
+                {copied ? <Check size={15} /> : <Copy size={15} />}
+              </button>
+            </div>
+
+            <div className="translator-output">
               {sessionExpired && <SessionExpiredMessage redirectTo="/translate" />}
+
               {!sessionExpired && translating && !streamedText && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="#1a73e8" strokeWidth="2.5"
-                    style={{ animation: 'gt-spin 0.8s linear infinite', flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
-                    <path d="M12 2a10 10 0 0 1 10 10" />
-                  </svg>
-                  <span style={{ color: '#9aa0a6', fontSize: 16 }}>번역 중...</span>
+                <div className="translator-status">
+                  <Loader2 size={15} className="translator-spin" />
+                  <span>번역 중</span>
                 </div>
               )}
+
               {!sessionExpired && error && (
-                <span style={{ color: '#d93025', fontSize: 15 }}>{error}</span>
+                <div className="translator-error">{error}</div>
               )}
+
               {!sessionExpired && streamedText && (
-                <div style={{ fontSize: 18, color: 'var(--text-primary)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
+                <div className="translator-result-text">
                   {streamedText}
-                  {translating && (
-                    <span style={{
-                      display: 'inline-block', width: 2, height: '1.1em',
-                      background: 'var(--text-primary)', marginLeft: 3,
-                      verticalAlign: 'text-bottom',
-                      animation: 'blink 0.9s step-end infinite',
-                    }} />
-                  )}
+                  {translating && <span className="translator-caret" />}
                 </div>
               )}
-              {!sessionExpired && !translating && !error && !streamedText && (
-                sourceIsWord ? (
-                  <span style={{ color: '#80868b', fontSize: 16 }}>단어를 입력하면 사전이 자동으로 열립니다</span>
-                ) : txHistory.length > 0 ? (
-                  <div>
-                    <div style={{ fontSize: 12, color: '#9aa0a6', marginBottom: 12, fontWeight: 500 }}>최근 번역</div>
+
+              {!sessionExpired && !translating && !error && !streamedText && !sourceIsWord && (
+                txHistory.length > 0 ? (
+                  <div className="translator-history">
+                    <div className="translator-history-title">Recent</div>
                     {txHistory.map(item => (
                       <button
                         key={item.id}
+                        className="translator-history-item"
                         onClick={() => { setSource(item.source_text); setStreamedText(item.translated_text) }}
-                        style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '10px 0', borderBottom: '1px solid #f1f3f4' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#f8f9fa')}
-                        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                        type="button"
                       >
-                        <div style={{ fontSize: 14, color: '#202124', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.source_text}</div>
-                        <div style={{ fontSize: 13, color: '#9aa0a6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.translated_text}</div>
+                        <span>{item.source_text}</span>
+                        <small>{item.translated_text}</small>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <span style={{ color: '#80868b', fontSize: 20 }}>번역 결과</span>
+                  <div className="translator-muted">번역 결과</div>
                 )
               )}
-            </div>
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-              padding: '0 16px', height: 44, flexShrink: 0,
-              borderTop: '1px solid #dadce0',
-            }}>
-              <button
-                className="gt-icon-btn"
-                onClick={handleCopy}
-                disabled={!streamedText || translating}
-                title={copied ? '복사됨!' : '복사'}
-                style={{ color: copied ? '#1a73e8' : '#5f6368' }}
-              >
-                {copied ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
 
-          {/* 우측 사전 패널 (position: fixed) */}
-          {dictOpen && (
-            <div style={{
-              position: 'fixed', right: 0, top: 56,
-              width: isMobile ? '100vw' : 360, height: 'calc(100vh - 56px)',
-              borderLeft: '1px solid #dadce0',
-              background: '#ffffff',
-              display: 'flex', flexDirection: 'column',
-              zIndex: 100,
-              overflow: 'hidden',
-            }}>
-              {/* 검색창 + 닫기 */}
-              <div style={{ padding: '12px 16px', flexShrink: 0, borderBottom: '1px solid #dadce0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ position: 'relative', flex: 1 }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                      stroke="#80868b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                      style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                    <input
-                      className="dict-panel-search"
-                      value={dictPanelInput}
-                      onChange={e => setDictPanelInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && openDict(dictPanelInput.trim())}
-                      placeholder="다른 단어 검색..."
-                    />
-                  </div>
-                  <button className="dict-close" onClick={() => setDictOpen(false)}>×</button>
-                </div>
-              </div>
+              {sourceIsWord && source.trim() && !sessionExpired && (
+                <div className="dict-inline">
+                  <div className="dict-inline-divider"><span>네이버 사전</span></div>
 
-              {/* 단어 헤더 */}
-              {dictQuery && (
-                <div style={{ padding: '14px 18px 10px', flexShrink: 0, borderBottom: '1px solid #f1f3f4' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontWeight: 700, fontSize: 22, color: '#202124', lineHeight: 1.3 }}>{dictQuery}</span>
-                    {dictResult?.audioUrl && (
-                      <button className="gt-icon-btn" style={{ padding: 4 }}
-                        onClick={() => new Audio(dictResult!.audioUrl!).play()} title="발음 듣기">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  {dictResult?.phonetic && (
-                    <div style={{ fontSize: 13, color: '#5f6368', marginTop: 2 }}>{stripHtml(dictResult.phonetic)}</div>
+                  {dictLoading && (
+                    <div className="translator-status">
+                      <Loader2 size={13} className="translator-spin" />
+                      <span>검색 중</span>
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* 컨텐츠 */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '0 18px 18px' }}>
-                {dictLoading && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>검색 중...</p>}
-                {!dictLoading && !dictResult && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>검색 결과 없음</p>}
+                  {!dictLoading && !dictResult && (
+                    <p className="dict-muted">검색 결과 없음</p>
+                  )}
 
-                {!dictLoading && dictResult && (() => {
-                  const defs = dictResult.definitions ?? []
-                  const exs  = dictResult.examples  ?? []
-                  const syns = dictResult.synonyms  ?? []
-
-                  const order: string[] = []
-                  const grouped: Record<string, typeof defs> = {}
-                  for (const d of defs) {
-                    const key = d.pos || '기타'
-                    if (!grouped[key]) { grouped[key] = []; order.push(key) }
-                    grouped[key].push(d)
-                  }
-
-                  return (
+                  {!dictLoading && dictResult && (
                     <>
-                      {defs.length === 0 && <p style={{ color: '#9aa0a6', fontSize: 14, marginTop: 16 }}>정의 없음</p>}
-                      {order.map((pos, pi) => (
-                        <div key={pos}>
-                          <div className="dict-pos-header">{POS_KO[pos] ?? pos}</div>
-                          {grouped[pos].map((d, i) => (
-                            <div key={i} className="dict-def-row">
-                              <div className="dict-def-number">{i + 1}</div>
+                      <div className="dict-inline-heading">
+                        <div>
+                          <strong>{dictQuery}</strong>
+                          {dictResult.phonetic && (
+                            <span className="dict-inline-phonetic">{stripHtml(dictResult.phonetic)}</span>
+                          )}
+                        </div>
+                        {dictResult.audioUrl && (
+                          <button
+                            className="translator-icon-btn"
+                            onClick={() => new Audio(dictResult!.audioUrl!).play()}
+                            title="발음 듣기"
+                            type="button"
+                          >
+                            <Volume2 size={13} />
+                          </button>
+                        )}
+                      </div>
+
+                      {defs.length === 0 && <p className="dict-muted">정의 없음</p>}
+
+                      {Object.entries(groupedDefs).map(([pos, items], pi) => (
+                        <section className="dict-section" key={pos}>
+                          <h3>{POS_KO[pos] ?? pos}</h3>
+                          {items.map((d, i) => (
+                            <div className="dict-def-row" key={`${pos}-${i}`}>
+                              <span className="dict-def-number">{i + 1}</span>
                               <div className="dict-def-body">
-                                <div className="dict-def-text">{d.value}</div>
-                                {d.exampleOri && (
-                                  <div className="dict-def-example"><q>{d.exampleOri}</q></div>
-                                )}
+                                <p>{d.value}</p>
+                                {d.exampleOri && <q>{d.exampleOri}</q>}
                                 {pi === 0 && i === 0 && syns.length > 0 && (
                                   <div className="dict-synonyms">
-                                    <span className="dict-synonyms-label">동의어: </span>
+                                    <span>동의어 </span>
                                     {syns.map((s, si) => (
-                                      <span key={si}>
-                                        <span className="dict-synonym" role="button"
-                                          onClick={() => { setSource(s); openDict(s) }}>{s}</span>
-                                        {si < syns.length - 1 && <span style={{ color: '#5f6368' }}>, </span>}
-                                      </span>
+                                      <button key={si} onClick={() => { setSource(s); openDict(s, false) }} type="button">
+                                        {s}
+                                      </button>
                                     ))}
                                   </div>
                                 )}
                               </div>
-                              {d.level && (
-                                <span style={{ alignSelf: 'flex-start', flexShrink: 0, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 4, ...(LEVEL_STYLE[d.level] ?? LEVEL_STYLE.general) }}>{d.level}</span>
-                              )}
+                              {d.level && <span className="dict-level">{d.level}</span>}
                             </div>
                           ))}
-                        </div>
+                        </section>
                       ))}
 
                       {exs.length > 0 && (
-                        <div>
-                          <div className="dict-pos-header">예문</div>
-                          {exs.map((ex, i) => (
-                            <div key={i} className="dict-example-row">
-                              <div className="dict-example-icon">❝</div>
-                              <div className="dict-example-body">
-                                <div className="dict-example-ori">{ex.ori}</div>
-                                {ex.trans && <div className="dict-example-trans">{ex.trans}</div>}
-                              </div>
+                        <section className="dict-section">
+                          <h3>예문</h3>
+                          {exs.slice(0, 3).map((ex, i) => (
+                            <div className="dict-example-row" key={i}>
+                              <p>{ex.ori}</p>
+                              {ex.trans && <small>{ex.trans}</small>}
                             </div>
                           ))}
-                        </div>
+                        </section>
                       )}
                     </>
-                  )
-                })()}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </section>
 
-        </div>{/* end 패널 영역 */}
+      </main>
 
-      </div>
-
-      {/* 컨텍스트 메뉴 */}
       {ctxVisible && (
-        <div style={{
-          position: 'fixed', left: ctxPos.x, top: ctxPos.y,
-          background: '#fff', border: '1px solid #dadce0',
-          borderRadius: 8, zIndex: 9999, minWidth: 180,
-          overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.12)',
-        }} onClick={() => setCtxVisible(false)}>
-          <button style={{
-            display: 'block', width: '100%', padding: '10px 16px',
-            background: 'none', border: 'none', textAlign: 'left',
-            fontSize: 14, color: '#202124', cursor: 'pointer', fontFamily: 'inherit',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#f1f3f4')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-            onClick={() => { openDict(ctxWord); setCtxVisible(false) }}
-          >네이버 사전에서 검색</button>
+        <div
+          className="translator-context-menu"
+          style={{ left: ctxPos.x, top: ctxPos.y }}
+          onClick={() => setCtxVisible(false)}
+        >
+          <button onClick={() => { openDict(ctxWord); setCtxVisible(false) }} type="button">
+            사전에서 검색
+          </button>
         </div>
       )}
-      {ctxVisible && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setCtxVisible(false)} />
-      )}
+      {ctxVisible && <div className="translator-context-backdrop" onClick={() => setCtxVisible(false)} />}
     </div>
+    {dictOpen && (
+      <aside className="dict-panel">
+        <div className="dict-toolbar">
+          <div className="dict-search">
+            <Search size={14} />
+            <input
+              value={dictPanelInput}
+              onChange={e => setDictPanelInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && openDict(dictPanelInput.trim())}
+              placeholder="Search"
+            />
+          </div>
+          <button className="translator-icon-btn" onClick={() => setDictOpen(false)} title="닫기" type="button">
+            <X size={15} />
+          </button>
+        </div>
+
+        {dictQuery && (
+          <div className="dict-heading">
+            <div>
+              <h2>{dictQuery}</h2>
+              {dictResult?.phonetic && <p>{stripHtml(dictResult.phonetic)}</p>}
+            </div>
+            {dictResult?.audioUrl && (
+              <button
+                className="translator-icon-btn"
+                onClick={() => new Audio(dictResult.audioUrl!).play()}
+                title="발음 듣기"
+                type="button"
+              >
+                <Volume2 size={15} />
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="dict-content">
+          {dictLoading && <p className="dict-muted">검색 중</p>}
+          {!dictLoading && !dictResult && <p className="dict-muted">검색 결과 없음</p>}
+
+          {!dictLoading && dictResult && (
+            <>
+              {defs.length === 0 && <p className="dict-muted">정의 없음</p>}
+
+              {Object.entries(groupedDefs).map(([pos, items], pi) => (
+                <section className="dict-section" key={pos}>
+                  <h3>{POS_KO[pos] ?? pos}</h3>
+                  {items.map((d, i) => (
+                    <div className="dict-def-row" key={`${pos}-${i}`}>
+                      <span className="dict-def-number">{i + 1}</span>
+                      <div className="dict-def-body">
+                        <p>{d.value}</p>
+                        {d.exampleOri && <q>{d.exampleOri}</q>}
+                        {pi === 0 && i === 0 && syns.length > 0 && (
+                          <div className="dict-synonyms">
+                            <span>동의어 </span>
+                            {syns.map((s, si) => (
+                              <button key={si} onClick={() => { setSource(s); openDict(s) }} type="button">
+                                {s}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {d.level && <span className="dict-level">{d.level}</span>}
+                    </div>
+                  ))}
+                </section>
+              ))}
+
+              {exs.length > 0 && (
+                <section className="dict-section">
+                  <h3>예문</h3>
+                  {exs.map((ex, i) => (
+                    <div className="dict-example-row" key={i}>
+                      <p>{ex.ori}</p>
+                      {ex.trans && <small>{ex.trans}</small>}
+                    </div>
+                  ))}
+                </section>
+              )}
+            </>
+          )}
+        </div>
+      </aside>
+    )}
+    </>
   )
 }

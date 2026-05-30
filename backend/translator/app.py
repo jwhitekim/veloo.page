@@ -1,6 +1,7 @@
 """Translation Studio — FastAPI + Claude API"""
 import asyncio
 import json
+import logging
 import os
 import re
 import time
@@ -207,15 +208,23 @@ async def translate(req: TranslateRequest):
     collected: list[str] = []
 
     async def stream():
-        async with _client.messages.stream(
-            model=CLAUDE_MODEL,
-            max_tokens=4096,
-            system=f"{_SYSTEM_PROMPT}\n\n{_RULES}",
-            messages=[{"role": "user", "content": f"{_EXAMPLES}\n\nINPUT:\n{text}"}],
-        ) as s:
-            async for chunk in s.text_stream:
-                collected.append(chunk)
-                yield chunk
+        try:
+            async with _client.messages.stream(
+                model=CLAUDE_MODEL,
+                max_tokens=4096,
+                system=f"{_SYSTEM_PROMPT}\n\n{_RULES}",
+                messages=[{"role": "user", "content": f"{_EXAMPLES}\n\nINPUT:\n{text}"}],
+            ) as s:
+                async for chunk in s.text_stream:
+                    collected.append(chunk)
+                    yield chunk
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logging.exception("translate stream error")
+            if not collected:
+                yield "번역 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
+            return
 
         if _supabase:
             try:
