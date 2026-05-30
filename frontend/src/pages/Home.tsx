@@ -79,9 +79,8 @@ export default function Home() {
       <main className="home-main">
         <section className="home-hero">
           <div>
-            <p className="home-kicker">Lab Toolkit</p>
-            <h1 className="home-title">Research operations dashboard</h1>
-            <p className="home-subtitle">논문 분석, 번역, 모델 리뷰, 할 일을 한 곳에서 관리합니다.</p>
+            <h1 className="home-title">작업 현황</h1>
+            <p className="home-subtitle">논문 분석, 번역, 모델 리뷰, 할 일을 한 곳에서 확인합니다.</p>
           </div>
           <Link to="/todo" className="home-primary-action">
             할 일 추가
