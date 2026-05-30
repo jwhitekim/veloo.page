@@ -53,8 +53,14 @@ export default function AddTodoModal({ onClose, onSave }: Props) {
       onClick={onClose}
     >
       <div
-        className="rounded-2xl shadow-2xl w-[480px] overflow-hidden"
-        style={{ background: 'var(--panel)', border: '1px solid var(--border)' }}
+        className="rounded-2xl shadow-2xl overflow-hidden"
+        style={{
+          background: 'var(--panel)',
+          border: '1px solid var(--border)',
+          width: 'min(480px, calc(100vw - 32px))',
+          maxHeight: 'calc(100dvh - 32px)',
+          overflowY: 'auto',
+        }}
         onClick={e => e.stopPropagation()}
       >
         {/* Modal header */}
