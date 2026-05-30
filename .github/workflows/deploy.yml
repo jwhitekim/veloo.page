@@ -22,7 +22,18 @@ jobs:
           script: |
             cd ~/Joonspace/veloo
             git pull origin main
+            docker stop veloo 2>/dev/null || true
+            docker rm veloo 2>/dev/null || true
             docker build -t veloo .
-            docker stop veloo || true
-            docker rm veloo || true
-            docker run -d --name veloo -p 9000:9000 --env-file .env veloo
+            docker run -d \
+              --name veloo \
+              --restart unless-stopped \
+              -p 9000:9000 \
+              --env-file .env \
+              veloo
+            sudo nginx -t && sudo systemctl restart nginx
+            sudo systemctl restart cloudflared
+            docker ps | grep veloo
+            sudo systemctl status nginx --no-pager -l | grep Active
+            sudo systemctl status cloudflared --no-pager -l | grep Active
+            curl -s -o /dev/null -w "veloo.page 응답: %{http_code}\n" https://veloo.page
