@@ -36,3 +36,22 @@ create table if not exists arch_history (
 );
 
 create index if not exists arch_history_created_at_idx on arch_history (created_at desc);
+
+CREATE TABLE users (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  username text UNIQUE NOT NULL,
+  password_hash text NOT NULL,
+  is_approved boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE sessions (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  token text UNIQUE NOT NULL,
+  expires_at timestamptz NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX ON sessions(token);
+CREATE INDEX ON sessions(expires_at);

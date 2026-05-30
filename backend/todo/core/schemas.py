@@ -61,7 +61,7 @@ class GenerateStepsRequest(BaseModel):
     todo_id: int | None = None
     todo_name: str = Field(..., max_length=200)
     memo: str = Field("", max_length=1000)
-    priority: Literal["low", "normal", "high"] = "normal"
+    priority: Literal["urgent", "mid", "normal"] = "normal"
     deadline: str = Field("", max_length=100)
 
 

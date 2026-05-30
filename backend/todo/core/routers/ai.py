@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from supabase import Client
@@ -26,7 +27,7 @@ OUTPUT: JSON only — {"steps": ["...", "..."]}"""
 # ── Context Layer 3: Few-shot
 _STEPS_EXAMPLES = """\
 EXAMPLE_1:
-  input:  TODO="Transformer 논문 리뷰" / PRIORITY=high / DEADLINE=2일
+  input:  TODO="Transformer 논문 리뷰" / PRIORITY=mid / DEADLINE=2일
   output: {"steps": [
     "Abstract~Introduction 읽고 연구 질문 한 줄 요약",
     "Architecture 섹션 읽고 Attention 수식 직접 유도",
@@ -93,7 +94,7 @@ def _write_steps_to_db(todo_id: int, steps: list[str], sb: Client) -> None:
     for i, step in enumerate(steps):
         sb.table("steps").insert({
             "todo_id": todo_id,
-            "name":    step,
+            "text":    step,
             "order_index": i,
             "done":    False,
         }).execute()
@@ -122,7 +123,7 @@ def _run_generate_steps(req: schemas.GenerateStepsRequest) -> None:
         steps = json.loads(raw).get("steps", [])
         _write_steps_to_db(req.todo_id, steps, sb)
     except Exception:
-        pass  # 백그라운드 실패는 무시 — 사용자는 수동으로 단계 추가 가능
+        logging.exception("Background step generation failed for todo_id=%s", req.todo_id)
 
 
 @router.post("/generate-steps-async")

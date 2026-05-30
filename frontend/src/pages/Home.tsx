@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckSquare, Globe, FileText, GitBranch } from 'lucide-react'
+import { CheckSquare, Globe, FileText, GitBranch, ArrowUpRight } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTodos } from '../hooks/useTodos'
 import * as paperApi from '../api/paper'
@@ -16,10 +16,10 @@ const PRIORITY_BADGE: Record<string, { label: string; color: string; bg: string 
 }
 
 const APP_CARDS = [
-  { name: 'Paper Analyzer', desc: 'PDF 추출 및 논문 분석', href: '/paper',        unit: '분석',   countKey: 'paper' as const },
-  { name: 'Translator',     desc: '영어 논문 용어 번역',  href: '/translate',    unit: '번역',   countKey: 'tx'    as const },
-  { name: 'Models Review',  desc: '모델 설명 + AI 피드백', href: '/arch-trainer', unit: '피드백', countKey: 'arch'  as const },
-  { name: 'Todo List',      desc: '연구실 할 일 관리',    href: '/todo',         unit: '할 일',  countKey: 'todo'  as const },
+  { name: 'Paper Analyzer', desc: 'PDF 추출 및 논문 분석', href: '/paper',        unit: '분석',   countKey: 'paper' as const, Icon: FileText },
+  { name: 'Translator',     desc: '영어 논문 용어 번역',  href: '/translate',    unit: '번역',   countKey: 'tx'    as const, Icon: Globe },
+  { name: 'Models Review',  desc: '모델 설명 + AI 피드백', href: '/arch-trainer', unit: '피드백', countKey: 'arch'  as const, Icon: GitBranch },
+  { name: 'Todo List',      desc: '연구실 할 일 관리',    href: '/todo',         unit: '할 일',  countKey: 'todo'  as const, Icon: CheckSquare },
 ]
 
 function trunc(s: string, n: number): string {
@@ -62,40 +62,98 @@ export default function Home() {
     return activityLoading ? null : counts[key]
   }
 
+  const completedTodos = todos.filter(todo => todo.done).length
+  const openTodos = todos.length - completedTodos
+
   return (
     <div className="home-root">
       <header className="home-header">
-        <span className="home-wordmark">veloo</span>
+        <Link to="/" className="home-wordmark">veloo</Link>
+        <nav className="home-nav" aria-label="Primary">
+          {APP_CARDS.map(({ name, href }) => (
+            <Link key={href} to={href} className="home-nav-link">{name}</Link>
+          ))}
+        </nav>
       </header>
 
       <main className="home-main">
+        <section className="home-hero">
+          <div>
+            <p className="home-kicker">Lab Toolkit</p>
+            <h1 className="home-title">Research operations dashboard</h1>
+            <p className="home-subtitle">논문 분석, 번역, 모델 리뷰, 할 일을 한 곳에서 관리합니다.</p>
+          </div>
+          <Link to="/todo" className="home-primary-action">
+            할 일 추가
+            <ArrowUpRight size={15} />
+          </Link>
+        </section>
 
-        {/* 상단: 앱 카드 4열 */}
-        <div className="app-grid">
-          {APP_CARDS.map(({ name, desc, href, unit, countKey }) => {
+        <section className="metric-grid" aria-label="Overview">
+          <div className="metric-card">
+            <span className="metric-label">Open tasks</span>
+            <strong className="metric-value">
+              {todosLoading ? <span className="skeleton-bar metric-skeleton" /> : openTodos}
+            </strong>
+          </div>
+          <div className="metric-card">
+            <span className="metric-label">Completed</span>
+            <strong className="metric-value">
+              {todosLoading ? <span className="skeleton-bar metric-skeleton" /> : completedTodos}
+            </strong>
+          </div>
+          <div className="metric-card">
+            <span className="metric-label">Paper analyses</span>
+            <strong className="metric-value">
+              {activityLoading ? <span className="skeleton-bar metric-skeleton" /> : counts.paper}
+            </strong>
+          </div>
+          <div className="metric-card">
+            <span className="metric-label">Translations</span>
+            <strong className="metric-value">
+              {activityLoading ? <span className="skeleton-bar metric-skeleton" /> : counts.tx}
+            </strong>
+          </div>
+        </section>
+
+        <section className="apps-section">
+          <div className="section-header">
+            <div>
+              <h2 className="section-title">Apps</h2>
+              <p className="section-description">자주 쓰는 연구 도구로 바로 이동합니다.</p>
+            </div>
+          </div>
+          <div className="app-grid">
+          {APP_CARDS.map(({ name, desc, href, unit, countKey, Icon }) => {
             const count = getCount(countKey)
             return (
               <Link key={href} to={href} className="app-card">
+                <div className="app-card-top">
+                  <span className="app-icon"><Icon size={18} /></span>
+                  <ArrowUpRight className="app-arrow" size={16} />
+                </div>
                 <div className="app-card-name">{name}</div>
-                <div className="app-card-desc">{desc}</div>
+                <p className="app-card-desc">{desc}</p>
                 <div className="app-card-count">
                   {count === null
-                    ? <div className="skeleton-bar" style={{ width: '40%', height: 14 }} />
+                    ? <span className="skeleton-bar app-count-skeleton" />
                     : `${unit} ${count}${unit === '할 일' ? '개' : '회'}`
                   }
                 </div>
               </Link>
             )
           })}
-        </div>
+          </div>
+        </section>
 
-        {/* 하단: 2열 */}
-        <div className="home-grid">
+        <section className="home-grid">
 
-          {/* 왼쪽: 할 일 */}
-          <section className="home-section home-card">
+          <div className="home-section home-card">
             <div className="section-header">
-              <span className="section-title">할 일</span>
+              <div>
+                <h2 className="section-title">할 일</h2>
+                <p className="section-description">최근 작업 큐</p>
+              </div>
               <Link to="/todo" className="section-more">전체 보기 →</Link>
             </div>
 
@@ -142,13 +200,12 @@ export default function Home() {
               </div>
             )}
 
-            <button className="todo-add-btn" onClick={() => navigate('/todo')}>
-              + 할 일 추가
+            <button className="todo-add-btn" onClick={() => navigate('/todo')} type="button">
+              <span>+ 할 일 추가</span>
             </button>
-          </section>
+          </div>
 
-          {/* 오른쪽: 최근 활동 */}
-          <aside className="home-aside">
+          <div className="home-aside">
             {activityLoading ? (
               <>
                 {[0, 1, 2].map(i => (
@@ -206,9 +263,9 @@ export default function Home() {
                 </div>
               </>
             )}
-          </aside>
+          </div>
 
-        </div>
+        </section>
       </main>
     </div>
   )

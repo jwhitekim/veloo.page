@@ -2,14 +2,33 @@ import type { Todo, Step } from '../types'
 
 const BASE = '/todo/api'
 
+export class ApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(BASE + path, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   })
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(err)
+    let message = ''
+    try {
+      const body = await res.json()
+      message = body?.error ?? body?.detail ?? JSON.stringify(body)
+    } catch {
+      message = await res.text().catch(() => '')
+    }
+    if (res.status === 401) {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+    }
+    throw new ApiError(message || `Request failed (${res.status})`, res.status)
   }
   return res.json()
 }

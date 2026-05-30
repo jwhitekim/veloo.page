@@ -5,12 +5,17 @@ import * as api from '../api/client'
 export function useTodos(filter: NavFilter) {
   const [todos, setTodos] = useState<Todo[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setError(null)
     try {
       const data = await api.getTodos(filter === 'all' ? undefined : filter)
       setTodos(data)
+    } catch (e) {
+      setError((e as Error).message)
+      setTodos([])
     } finally {
       setLoading(false)
     }
@@ -45,5 +50,5 @@ export function useTodos(filter: NavFilter) {
     return updated
   }
 
-  return { todos, loading, reload: load, addTodo, editTodo, removeTodo, toggleDone, refresh }
+  return { todos, loading, error, reload: load, addTodo, editTodo, removeTodo, toggleDone, refresh }
 }
